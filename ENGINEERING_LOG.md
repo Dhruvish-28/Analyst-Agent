@@ -238,7 +238,7 @@ This document serves as the persistent, chronological log of architectural decis
 * **Empirical Benchmark Numbers**:
   - **Execution Accuracy (EX)**: **63.0%** (63/100 correct)
   - **Valid-SQL Rate**: **93.0%** (93/100)
-  - **Average Latency**: **1.566 s / question** (slashed from 1.911s baseline and 1.684s unmerged fine-tuned model; the fastest benchmark recorded across all configurations).
+  - **Average Latency**: **1.566 s / question** (slashed from 1.911s baseline and 5.510s unmerged fine-tuned model; the fastest benchmark recorded across all configurations).
   - **Conclusion**: Merging eliminates runtime PEFT library dependencies, removes dual-branch forward pass overhead, drops query latency to 1.566s, and maintains high execution accuracy without mathematical loss.
 
 ---

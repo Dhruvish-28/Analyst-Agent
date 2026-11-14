@@ -22,15 +22,15 @@
 
 ## 2. Failure Analysis (Patterns Across Unseen Spider Dev)
 
-An analysis of 15 incorrect query predictions revealed 4 distinct error categories:
+An analysis of 15 incorrect query predictions categorized in `results/failure_analysis.json` revealed 4 distinct error categories:
 
-1. **Schema Linkage / Missing JOINs (40%)**:
-   - The model predicted columns from a related table without performing the requisite JOIN (e.g., querying `Template_Type_Code` directly from `Documents` rather than joining with `Templates`).
-2. **Column Projection Order (25%)**:
-   - The model selected the correct columns and values, but in a different order than the gold reference query (e.g., `SELECT Population, Name...` vs gold `SELECT Name, population...`), resulting in a positional tuple mismatch.
-3. **Condition Literal Mismatch (15%)**:
-   - Value formatting discrepancy (e.g., filtering `Citizenship != 'French'` vs reference `Citizenship != 'France'`).
-4. **Complex Logical Composition (20%)**:
-   - Substituting `OR` or `IN` where set intersection (`INTERSECT`) was required for simultaneous constraints across multiple rows.
+1. **Schema Linkage / Missing JOINs (6 cases / 40.0%)**:
+   - The model referenced columns from related tables without performing the requisite JOIN (e.g., querying `Template_Type_Code` directly on `Documents` rather than joining with `Templates`).
+2. **Complex Set & Aggregation Logic (5 cases / 33.3%)**:
+   - Substituting `OR` or `IN` where set intersection (`INTERSECT`) was required for simultaneous constraints across multiple rows, or substituting `SUM` on percentages for `COUNT(*)`.
+3. **Column Projection Order (2 cases / 13.3%)**:
+   - The model selected the correct columns and values, but in a different order than the gold reference query (e.g., `SELECT Population, Name...` vs gold `SELECT Name, Population...`), resulting in a positional tuple mismatch.
+4. **Condition Literal Mismatch (2 cases / 13.3%)**:
+   - String literal formatting discrepancy (e.g., filtering `Citizenship != 'French'` vs gold `Citizenship != 'France'`, or case-sensitive string matching).
 
 ---

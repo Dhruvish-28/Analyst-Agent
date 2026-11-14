@@ -29,24 +29,13 @@ RUN update-alternatives --install /usr/bin/python python /usr/bin/python3.11 1 \
 # Set working directory
 WORKDIR /app
 
-# Copy dependency definition
+# Copy dependency definition and install via pyproject.toml
 COPY pyproject.toml /app/
 
 # Upgrade pip and install PyTorch with CUDA 12.4 wheels first for stability
 RUN pip install --no-cache-dir --upgrade pip setuptools wheel \
-    && pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124
-
-# Install application dependencies
-RUN pip install --no-cache-dir \
-    "transformers>=4.48.0" \
-    "peft>=0.14.0" \
-    "bitsandbytes>=0.43.0" \
-    "langgraph>=1.2.20" \
-    "sqlglot>=26.14.0" \
-    "fastapi>=0.115.0" \
-    "uvicorn>=0.34.0" \
-    "pydantic>=2.10.0" \
-    "rich>=13.9.0"
+    && pip install --no-cache-dir torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu124 \
+    && pip install --no-cache-dir -e .
 
 # Copy source code, web UI static assets, configs, databases, and trained LoRA adapter
 COPY src/ /app/src/

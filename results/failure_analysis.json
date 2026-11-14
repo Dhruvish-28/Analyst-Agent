@@ -7,7 +7,9 @@
     "gold_sql": "SELECT T2.Language FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T1.Continent  =  \"Asia\" GROUP BY T2.Language ORDER BY COUNT (*) DESC LIMIT 1",
     "pred_sql": "SELECT Language, SUM(Percentage) as Total FROM countrylanguage WHERE CountryCode IN (SELECT Code FROM country WHERE Continent = 'Asia') GROUP BY Language ORDER BY Total DESC LIMIT 1;",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Complex Set & Aggregation Logic",
+    "root_cause_explanation": "Used subquery with SUM(Percentage) instead of COUNT(*) country join"
   },
   {
     "index": 2,
@@ -17,7 +19,9 @@
     "gold_sql": "SELECT Name FROM singer WHERE Citizenship != \"France\"",
     "pred_sql": "SELECT Name FROM singer WHERE Citizenship != 'French';",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Condition Literal Mismatch",
+    "root_cause_explanation": "Used Citizenship != French instead of gold Citizenship != France"
   },
   {
     "index": 3,
@@ -27,7 +31,9 @@
     "gold_sql": "SELECT T1.Abbreviation ,  T1.Country FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) LIMIT 1",
     "pred_sql": "SELECT A.Abbreviation, A.Country FROM airlines A JOIN (SELECT SourceAirport, COUNT(*) as num_flights FROM flights GROUP BY SourceAirport ORDER BY num_flights ASC LIMIT 1) F ON A.uid = F.SourceAirport;",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Schema Linkage & Multi-Hop Joins",
+    "root_cause_explanation": "Joined airlines on flights.SourceAirport instead of flights.Airline"
   },
   {
     "index": 4,
@@ -37,7 +43,9 @@
     "gold_sql": "SELECT count(*) FROM CAR_MAKERS AS T1 JOIN COUNTRIES AS T2 ON T1.Country  =  T2.CountryId WHERE T2.CountryName  =  'france';",
     "pred_sql": "SELECT COUNT(*) FROM car_makers WHERE Country = 'France';",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Schema Linkage & Multi-Hop Joins",
+    "root_cause_explanation": "Queried car_makers directly without joining countries table"
   },
   {
     "index": 5,
@@ -47,7 +55,9 @@
     "gold_sql": "SELECT Airline ,  Abbreviation FROM AIRLINES WHERE Country  =  \"USA\"",
     "pred_sql": "SELECT A.Airline, A.Abbreviation FROM airlines A JOIN flights F ON A.uid = F.Airline WHERE A.Country = 'USA';",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Schema Linkage & Multi-Hop Joins",
+    "root_cause_explanation": "Added unnecessary JOIN to flights table causing row multiplication"
   },
   {
     "index": 6,
@@ -57,7 +67,9 @@
     "gold_sql": "SELECT T1.template_id ,  T2.Template_Type_Code FROM Documents AS T1 JOIN Templates AS T2 ON T1.template_id  =  T2.template_id GROUP BY T1.template_id ORDER BY count(*) DESC LIMIT 1",
     "pred_sql": "SELECT Template_ID, Template_Type_Code FROM Documents GROUP BY Template_ID, Template_Type_Code ORDER BY COUNT(*) DESC LIMIT 1;",
     "valid_sql": "False",
-    "error_msg": "Runtime Error: no such column: Template_Type_Code"
+    "error_msg": "Runtime Error: no such column: Template_Type_Code",
+    "category": "Schema Linkage & Multi-Hop Joins",
+    "root_cause_explanation": "Referenced Template_Type_Code on Documents without joining Templates table"
   },
   {
     "index": 7,
@@ -67,7 +79,9 @@
     "gold_sql": "SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country GROUP BY T1.countryId HAVING count(*)  >  3 UNION SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country JOIN MODEL_LIST AS T3 ON T2.Id  =  T3.Maker WHERE T3.Model  =  'fiat';",
     "pred_sql": "SELECT c.CountryName, COUNT(*) FROM car_makers cm JOIN countries c ON cm.Country = c.CountryName WHERE cm.Maker IN ('Ford', 'Chevrolet', 'Toyota') OR cm.Model = 'fiat' GROUP BY c.CountryName HAVING COUNT(*) > 3;",
     "valid_sql": "False",
-    "error_msg": "Runtime Error: no such column: cm.Model"
+    "error_msg": "Runtime Error: no such column: cm.Model",
+    "category": "Complex Set & Aggregation Logic",
+    "root_cause_explanation": "Attempted single OR condition instead of relational UNION"
   },
   {
     "index": 8,
@@ -77,7 +91,9 @@
     "gold_sql": "SELECT Name ,  population ,  HeadOfState FROM country ORDER BY SurfaceArea DESC LIMIT 1",
     "pred_sql": "SELECT c.Population, c.Name, c.HeadOfState FROM country c ORDER BY c.SurfaceArea DESC LIMIT 1;",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Column Projection Order",
+    "root_cause_explanation": "Inverted positional column order: (Population, Name) vs gold (Name, Population)"
   },
   {
     "index": 9,
@@ -87,7 +103,9 @@
     "gold_sql": "SELECT T1.killed ,  T1.injured FROM death AS T1 JOIN ship AS t2 ON T1.caused_by_ship_id  =  T2.id WHERE T2.tonnage  =  't'",
     "pred_sql": "SELECT d.note, d.killed, d.injured FROM death d JOIN ship s ON d.caused_by_ship_id = s.id WHERE s.tonnage = 't';",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Column Projection Order",
+    "root_cause_explanation": "Projected extra leading column d.note shifting tuple positions"
   },
   {
     "index": 10,
@@ -97,7 +115,9 @@
     "gold_sql": "select sum(population) ,  avg(surfacearea) from country where continent  =  \"north america\" and surfacearea  >  3000",
     "pred_sql": "SELECT SUM(Population), AVG(SurfaceArea) FROM country WHERE Continent = 'North America' AND SurfaceArea > 3000;",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Condition Literal Mismatch",
+    "root_cause_explanation": "Case-sensitive string literal: North America vs gold north america"
   },
   {
     "index": 11,
@@ -107,7 +127,9 @@
     "gold_sql": "select name from dogs where dog_id not in ( select dog_id from treatments group by dog_id having sum(cost_of_treatment)  >  1000 )",
     "pred_sql": "SELECT d.name FROM Dogs d JOIN Treatments t ON d.dog_id = t.dog_id WHERE t.cost_of_treatment <= 1000;",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Complex Set & Aggregation Logic",
+    "root_cause_explanation": "Filtered individual treatment cost <= 1000 instead of aggregate HAVING sum > 1000"
   },
   {
     "index": 12,
@@ -117,7 +139,9 @@
     "gold_sql": "SELECT avg(T2.edispl) FROM CAR_NAMES AS T1 JOIN CARS_DATA AS T2 ON T1.MakeId  =  T2.Id WHERE T1.Model  =  'volvo';",
     "pred_sql": "SELECT AVG(Edispl) FROM cars_data WHERE Model = 'Volvo';",
     "valid_sql": "False",
-    "error_msg": "Runtime Error: no such column: Model"
+    "error_msg": "Runtime Error: no such column: Model",
+    "category": "Schema Linkage & Multi-Hop Joins",
+    "root_cause_explanation": "Queried cars_data directly without joining car_names for Model"
   },
   {
     "index": 13,
@@ -127,7 +151,9 @@
     "gold_sql": "SELECT T1.series_name ,  T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.directed_by  =  'Michael Chang' INTERSECT SELECT T1.series_name ,  T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.directed_by  =  'Ben Jones'",
     "pred_sql": "SELECT T2.series_name, T2.Country FROM Cartoon AS T1 INNER JOIN TV_Channel AS T2 ON T1.Channel = T2.id WHERE T1.Directed_by = 'Ben Jones' OR T1.Directed_by = 'Michael Chang';",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Complex Set & Aggregation Logic",
+    "root_cause_explanation": "Substituted OR condition instead of relational INTERSECT"
   },
   {
     "index": 14,
@@ -137,7 +163,9 @@
     "gold_sql": "SELECT COUNT(*) FROM (SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"English\" INTERSECT SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"Dutch\")",
     "pred_sql": "SELECT COUNT(DISTINCT T1.Code) FROM country AS T1 INNER JOIN countrylanguage AS T2 ON T1.Code = T2.CountryCode WHERE T2.Language IN ('English', 'Dutch');",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Complex Set & Aggregation Logic",
+    "root_cause_explanation": "Used IN operator instead of relational INTERSECT for dual language requirement"
   },
   {
     "index": 15,
@@ -147,6 +175,8 @@
     "gold_sql": "SELECT sum(Population) FROM country WHERE Name NOT IN (SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"English\")",
     "pred_sql": "SELECT COUNT(*) FROM country WHERE Code NOT IN (SELECT CountryCode FROM countrylanguage WHERE Language = 'English');",
     "valid_sql": "True",
-    "error_msg": ""
+    "error_msg": "",
+    "category": "Schema Linkage & Multi-Hop Joins",
+    "root_cause_explanation": "Projected COUNT(*) of countries instead of SUM(Population) of people"
   }
 ]

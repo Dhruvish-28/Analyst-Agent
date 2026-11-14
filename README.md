@@ -4,7 +4,7 @@
 [![CUDA](https://img.shields.io/badge/CUDA-12.4-76B900?logo=nvidia&logoColor=white)](https://developer.nvidia.com/cuda-zone)
 [![QLoRA](https://img.shields.io/badge/QLoRA-4--bit%20NF4-8A2BE2)](https://github.com/artidoro/qlora)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Cyclic%20Agent-blue)](https://github.com/langchain-ai/langgraph)
-[![FastAPI](https://img.shields.io/badge/FastAPI-0.115-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
+[![FastAPI](https://img.shields.io/badge/FastAPI-0.141.1-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
 [![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Dark%20OLED-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-GPU%20Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Spider Benchmark](https://img.shields.io/badge/Spider%20Dev-100%20Questions-orange)](https://yale-lily.github.io/spider)
@@ -98,7 +98,7 @@ All configurations were evaluated on the **exact same 100 fixed Spider dev bench
 | Model / Configuration                    |     Retry Strategy     | Execution Accuracy (EX) |   Valid-SQL Rate   | Avg Latency | Avg Attempts / Query | Artifact File                                       |
 | :--------------------------------------- | :--------------------: | :---------------------: | :----------------: | :---------: | :------------------: | :-------------------------------------------------- |
 | **Base Qwen2.5-Coder-3B** (Untuned)      |   None (Greedy, T=0)   |   **61.0%** (61/100)    | **86.0%** (86/100) | **1.911 s** |         1.00         | `results/baseline_20261111_204423.json`             |
-| **Fine-Tuned 3B** (1-Epoch QLoRA)        |   None (Greedy, T=0)   |   **59.0%** (59/100)    | **95.0%** (95/100) | **1.684 s** |         1.00         | `results/finetuned_3b_20261111_213542.json`         |
+| **Fine-Tuned 3B** (1-Epoch QLoRA)        |   None (Greedy, T=0)   |   **59.0%** (59/100)    | **95.0%** (95/100) | **5.510 s** |         1.00         | `results/finetuned_3b_20261111_213542.json`         |
 | **Merged Standalone 3B** (Fused Weights) |   None (Greedy, T=0)   |   **63.0%** (63/100)    | **93.0%** (93/100) | **1.566 s** |         1.00         | `results/merged_3b_20261113_153431.json`            |
 | **LangGraph Agent** (Fine-Tuned)         | `error_feedback` (T=0) |   **57.0%** (57/100)    | **95.0%** (95/100) | **3.540 s** |         1.12         | `results/agent_error_feedback_20261112_214029.json` |
 | **LangGraph Agent** (Fine-Tuned)         | **`resample`** (T=0.7) |   **58.0%** (58/100)    | **97.0%** (97/100) | **3.626 s** |       **1.11**       | `results/agent_resample_20261112_213417.json`       |
@@ -109,6 +109,7 @@ All configurations were evaluated on the **exact same 100 fixed Spider dev bench
 > - **Sample Size**: On a fixed 100-question benchmark, a ±2% to ±3% difference in Execution Accuracy falls within the standard binomial sampling margin of error (±4.8% for N=100). The base model and fine-tuned model are statistically tied on semantic correctness.
 > - **Valid-SQL Mastery**: Fine-tuning produced an unambiguous **+9.0% absolute increase in Valid-SQL rate** (86.0% → 95.0%), eliminating **64% of syntax and schema invalidity errors**.
 > - **The Self-Healing Loop**: The LangGraph agent using stochastic resampling further elevated Valid-SQL to **97.0%** (+11.0% over baseline), with an average of 1.11 attempts per query.
+> - **Latency & Token Horizons**: Baseline (1.911 s) and fine-tuned QLoRA adapter (5.510 s) were evaluated with `max_new_tokens=256` (the 5.510 s latency reflects dynamic PEFT forward-pass overhead on top of 4-bit quantized base weights). Standalone merged weights (1.566 s) and LangGraph agent runs (3.540 s / 3.626 s across up to 3 retry steps) used `max_new_tokens=128`, where weight fusion eliminates adapter overhead entirely.
 
 ---
 
@@ -139,12 +140,12 @@ Avg Attempts / Query        1.11                    1.12
 
 A qualitative audit of 15 incorrect queries on the unseen Spider dev benchmark (`results/failure_analysis.json`) revealed four primary failure categories:
 
-| Error Category                       |  Share  | Description & Example Root Cause                                                                                                                                             |
-| :----------------------------------- | :-----: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Schema Linkage & Multi-Hop Joins** | **40%** | Referencing columns from related tables without performing the requisite `JOIN`, or selecting child tables due to aggregation keywords.                                      |
-| **Column Projection Order**          | **25%** | Generating the correct data columns but in inverted positional order (e.g., `SELECT Population, Name` vs gold `SELECT Name, Population`), causing positional tuple mismatch. |
-| **Complex Set Logic**                | **20%** | Substituting `OR` or `IN` subqueries where relational set intersection (`INTERSECT`) was required for multi-row entity constraints.                                          |
-| **Condition Literal Mismatches**     | **15%** | Formatting discrepancies in string literals (e.g., filtering `WHERE Citizenship != 'French'` vs gold `WHERE Citizenship != 'France'`).                                       |
+| Error Category                       |      Share (Count)      | Description & Example Root Cause                                                                                                                                             |
+| :----------------------------------- | :---------------------: | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Schema Linkage & Multi-Hop Joins** | **40.0%** (6/15)        | Referencing columns from related tables without performing the requisite `JOIN`, or selecting child tables due to aggregation keywords.                                      |
+| **Complex Set & Aggregation Logic**  | **33.3%** (5/15)        | Substituting `OR` or `IN` subqueries where relational set intersection (`INTERSECT`) was required for multi-row entity constraints, or replacing `COUNT(*)` with `SUM`.     |
+| **Column Projection Order**          | **13.3%** (2/15)        | Generating the correct data columns but in inverted positional order (e.g., `SELECT Population, Name` vs gold `SELECT Name, Population`), causing positional tuple mismatch. |
+| **Condition Literal Mismatches**     | **13.3%** (2/15)        | Formatting discrepancies in string literals (e.g., filtering `WHERE Citizenship != 'French'` vs gold `WHERE Citizenship != 'France'`).                                       |
 
 ### Example of failure on a complex query
 
@@ -184,19 +185,18 @@ Fine-tuning was conducted natively on consumer desktop hardware:
 ## Project Structure
 
 ```text
-E:\Projects\SQL\
+text-to-sql-analyst-agent/
 ├── README.md                           # Master project documentation & portfolio presentation
 ├── LICENSE                             # MIT Open Source License
-├── ENGINEERING_LOG.md                  # Comprehensive decision log (15 decisions, 6 incidents)
-├── Text-to-SQL Analyst Agent — Master Plan.md # Authoritative plan & specification
+├── ENGINEERING_LOG.md                  # Comprehensive decision log (19 decisions, 6 incidents)
 ├── pyproject.toml                      # Project metadata, pinned dependencies, tool configs
 ├── docker-compose.yml                  # Single-command GPU container configuration
 │
 ├── docker/
-│   └── Dockerfile                      # Multi-stage Ubuntu 22.04 + CUDA 12.4 + PyTorch runtime
+│   └── Dockerfile                      # GPU runtime container (Ubuntu 22.04 + CUDA 12.4 + PyTorch)
 │
 ├── configs/
-│   └── training_config.yaml            # QLoRA hyperparameters, LoRA target modules, training args
+│   └── qlora_qwen3b.yaml               # QLoRA hyperparameters, LoRA target modules, training args
 │
 ├── src/
 │   ├── sql_tools.py                    # Schema extraction, read-only URI, AST safety, row comparison
@@ -204,6 +204,7 @@ E:\Projects\SQL\
 │   ├── api.py                          # Production FastAPI REST backend with Pydantic schemas
 │   ├── evaluate.py                     # Standalone evaluation harness on 100 Spider dev questions
 │   ├── evaluate_agent.py               # Evaluation harness for LangGraph self-healing agent loop
+│   ├── merge_adapter.py                # Merges LoRA adapter into 16-bit standalone weights
 │   ├── train.py                        # QLoRA fine-tuning script via TRL SFTTrainer
 │   ├── prepare_data.py                 # Gretel cleaning pipeline, AST validation, leakage checks
 │   ├── setup_eval_data.py              # Automated download of 18 Spider SQLite databases & dev split
@@ -223,11 +224,13 @@ E:\Projects\SQL\
 │   └── spider_db/                      # 18 downloaded SQLite benchmark databases
 │
 ├── output/
-│   └── final_adapter/                  # Trained LoRA adapter weights (59.9 MB)
+│   ├── final_adapter/                  # Trained LoRA adapter weights (59.9 MB)
+│   └── merged_model/                   # Optional standalone fused weights (via merge_adapter.py)
 │
 └── results/                            # Persistent evaluation JSON and CSV logs
     ├── baseline_20261111_204423.json   # Base model scores: 61.0% EX, 86.0% Valid-SQL
     ├── finetuned_3b_20261111_213542.json # Fine-tuned scores: 59.0% EX, 95.0% Valid-SQL
+    ├── merged_3b_20261113_153431.json  # Merged model scores: 63.0% EX, 93.0% Valid-SQL
     ├── agent_resample_20261112_213417.json # Resample agent: 58.0% EX, 97.0% Valid-SQL
     ├── agent_error_feedback_20261112_214029.json # Feedback agent: 57.0% EX, 95.0% Valid-SQL
     ├── failure_analysis.json           # Categorized 15 failure samples
@@ -243,7 +246,7 @@ E:\Projects\SQL\
 #### 1. Clone & Setup Virtual Environment
 
 ```bash
-git https://github.com/Dhruvish-28/Analyst-Agent.git
+git clone https://github.com/Dhruvish-28/Analyst-Agent.git
 cd Analyst-Agent
 
 # Create virtual environment with Python 3.11
@@ -262,7 +265,17 @@ pip install torch torchvision torchaudio --index-url https://download.pytorch.or
 pip install -e .
 ```
 
-#### 2. Run Hardware & Safety Tests
+#### 2. Download Benchmark Databases
+
+The 18 Spider benchmark SQLite databases (~100 MB) are downloaded on demand:
+
+```bash
+python src/setup_eval_data.py
+```
+
+> _This populates `data/spider_db/` with all 18 SQLite databases and verifies `data/processed/eval_questions.json`._
+
+#### 3. Run Hardware & Safety Tests
 
 ```bash
 # Verify GPU detection & 4-bit quantization
@@ -272,7 +285,7 @@ python src/test_gpu.py
 python -m pytest tests
 ```
 
-#### 3. (Optional) Fuse Weights for Maximum Inference Speed
+#### 4. (Optional) Fuse Weights for Maximum Inference Speed
 
 By default, the repository runs with the base model and lightweight 59.9 MB LoRA adapter (`output/final_adapter/`). To eliminate adapter computation and achieve the fastest query latency (~1.56s):
 
@@ -282,7 +295,7 @@ python src/merge_adapter.py
 
 > _Note: The Agent and FastAPI backend automatically detect and switch to `output/merged_model/` once created, with zero extra configuration._
 
-#### 4. Launch the Analyst Web Dashboard & API
+#### 5. Launch the Analyst Web Dashboard & API
 
 ```bash
 python -m uvicorn src.api:app --host 127.0.0.1 --port 8000
@@ -294,7 +307,12 @@ Open your browser to: **`http://localhost:8000`**
 
 ### Option 2: Docker Deployment (GPU-Accelerated)
 
-Prerequisites: Docker Desktop with WSL2 backend (Windows) or NVIDIA Container Toolkit (Linux).
+Prerequisites:
+1. Docker Desktop with WSL2 backend (Windows) or NVIDIA Container Toolkit (Linux).
+2. Download Spider evaluation databases before building:
+   ```bash
+   python src/setup_eval_data.py
+   ```
 
 ```bash
 # Build and run container with GPU pass-through

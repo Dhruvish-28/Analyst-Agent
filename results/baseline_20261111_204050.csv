@@ -1,7 +1,0 @@
-eval_id,db_id,question,gold_sql,predicted_sql,execution_match,valid_sql,error_message,latency_sec
-1,cre_Doc_Template_Mgt,What is the document name and template id for document with description with the letter 'w' in it?,"SELECT document_name ,  template_id FROM Documents WHERE Document_Description LIKE ""%w%""","SELECT T1.Document_Name, T1.Template_ID
-FROM Documents AS T1
-JOIN Templates AS T2 ON T1.Template_ID = T2.Template_ID
-WHERE T1.Document_Description LIKE '%w%'",True,True,,2.76
-2,world_1,Which language is the most popular on the Asian continent?,"SELECT T2.Language FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T1.Continent  =  ""Asia"" GROUP BY T2.Language ORDER BY COUNT (*) DESC LIMIT 1",SELECT T2.Language FROM country AS T1 INNER JOIN countrylanguage AS T2 ON T1.Code = T2.CountryCode WHERE T1.Continent = 'Asia' GROUP BY T2.Language ORDER BY SUM(T2.Percentage) DESC LIMIT 1;,True,True,,2.759
-3,dog_kennels,Find the states where both owners and professionals live.,SELECT state FROM Owners INTERSECT SELECT state FROM Professionals,SELECT DISTINCT T1.state FROM Owners AS T1 INNER JOIN Professionals AS T2 ON T1.owner_id = T2.owner_id,False,False,Runtime Error: no such column: T2.owner_id,1.773

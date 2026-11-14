@@ -3,7 +3,7 @@
 Complies strictly with Text-to-SQL Analyst Agent — Master Plan:
 - Evaluates Execution Accuracy (EX), Valid-SQL Rate, and Latency (seconds per question).
 - Uses standard ChatML prompt template matching training and agent loop.
-- Uses greedy decoding (temperature=0, max_new_tokens=256, stop at end-of-turn).
+- Uses greedy decoding (temperature=0, max_new_tokens=128, stop at end-of-turn).
 - Saves results to results/ as timestamped JSON and CSV files without overwriting.
 """
 

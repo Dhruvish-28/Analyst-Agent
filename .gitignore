@@ -15,7 +15,12 @@ output/checkpoints
 
 # Dataset used
 data/raw
-data/spider_db
+data/spider_db/*
+!data/spider_db/.gitkeep
 
 # Skills used by agent
 .agents/skills  
+
+# Private documentation & metrics
+RESUME_METRICS.md
+*Master Plan.md
