@@ -203,6 +203,8 @@ This document serves as the persistent, chronological log of architectural decis
     - Exposes port `8000` with health check against `/api/v1/health`.
     - Enables single-command deployment: `docker compose up` or `docker run --gpus all -p 8000:8000 text-to-sql-agent`.
 
+> **Update:** The dashboard portion of this decision was superseded by Decision 21 (redesigned Nov 14, 2026). The containerization portion still stands.
+
 ---
 
 ### Decision 15: Schema Linking Investigation & Question Phrasing Sensitivity
@@ -279,6 +281,21 @@ This document serves as the persistent, chronological log of architectural decis
 - **Date**: Nov 14, 2026
 - **Context**: Most people have no local GPU, and the benchmark databases cover only Spider.
 - **Decision**: Added `notebooks/analyst_agent_colab.ipynb`: loads the base model plus adapter on a free T4, with a Gradio UI that accepts sample databases or uploaded SQLite/CSV/Excel files. Schemas that exceed the 1,024-token training window are trimmed to the relevant tables. No repository code was changed.
+
+---
+
+### Decision 21: Dashboard Redesign Around Query Verification
+
+- **Date**: Nov 14, 2026
+- **Context**: The original dark Tailwind dashboard was a generic card layout and loaded Tailwind, Prism.js, Lucide and Google Fonts from CDNs, so it needed internet access and gave little help in judging whether a generated query was right.
+- **Decision**: Rewrote `src/static/index.html` as a single self-contained file with no external fonts, scripts or icons. The API contract (`/api/v1/health`, `/databases`, `/query`) is unchanged, so no backend changes were needed.
+  - **Question first**: a large ruled input with per-database example questions.
+  - **Schema browser**: tables expand to columns, types, primary keys and foreign-key references; clicking a column inserts its name into the question, targeting the schema-linking failures found in Decision 15.
+  - **SQL and results**: auto-formatted, syntax-highlighted SQL with copy; results table with row numbers, right-aligned numbers, visible nulls, 200-row cap notice and CSV export.
+  - **Run record**: a per-attempt receipt showing whether each attempt was written, checked (AST) and run, with the exact error, and a "Recovered" verdict when a retry fixed the query. This surfaces the LangGraph self-healing loop to the user.
+  - **Honesty and safety**: a standing note to read the SQL before trusting results, quoting the benchmark match rate for the chosen strategy (58 or 57 in 100), and a list of what the agent cannot do.
+  - **Quality floor**: responsive down to phone width (schema collapses on small screens), visible keyboard focus, reduced-motion respected.
+- **Verification**: Exercised against a mock API in headless Chrome across success, retry-recovered, failed, zero-row, 200-row-capped, HTTP 422 and API-offline states, at desktop, tablet and phone widths. No horizontal overflow, no external requests. Not yet run against the real model.
 
 ---
 
@@ -359,5 +376,5 @@ This document serves as the persistent, chronological log of architectural decis
 - [x] **Repository Cleanup**: Removed all obsolete `nl2sql` legacy folders and outdated dataset splits.
 - [x] **Agent Benchmark Evaluation**: Run 100 benchmark questions through LangGraph agent to measure error-recovery rate (Resample: 97.0% Valid-SQL, 58.0% EX; Error Feedback: 95.0% Valid-SQL, 57.0% EX).
 - [x] **FastAPI Backend (`src/api.py`)**: REST API with `/health`, `/databases`, and `/query` endpoints verified with unit and integration tests (`tests/test_api.py`).
-- [x] **Web UI & Dockerization**: Interactive dark-mode dashboard (`src/static/index.html`) mounted at root `/`, and production GPU Docker setup (`docker/Dockerfile`, `docker-compose.yml`, `.dockerignore`).
+- [x] **Web UI & Dockerization**: Self-contained web dashboard (`src/static/index.html`, redesigned in Decision 21) mounted at root `/`, and production GPU Docker setup (`docker/Dockerfile`, `docker-compose.yml`, `.dockerignore`).
 - [x] **Final Project Documentation & Portfolio Presentation**: Master README with architectural diagram, comparative benchmark table, and failure analysis write-up.

@@ -31,7 +31,7 @@ This project demonstrates a production-grade, privacy-first alternative:
 1. **Local Parameter-Efficient Fine-Tuning (PEFT)**: Fine-tuned `Qwen/Qwen2.5-Coder-3B-Instruct` with 4-bit QLoRA on a single **NVIDIA GeForce RTX 3060 12GB** under a tight **4.00 GB peak VRAM ceiling**, completing 1 epoch across 5,000 verified SQL pairs in **~30 minutes**.
 2. **Empirical Benchmarking**: Measured performance before and after fine-tuning against **100 fixed, unseen Spider dev benchmark questions** across 18 distinct SQLite databases. Fine-tuning boosted the **Valid-SQL rate from 86.0% to 95.0%** (a **64% reduction in syntax/schema errors**).
 3. **LangGraph Self-Healing Agent**: Built a cyclic state machine agent wrapping the model with `sqlglot` AST validation and read-only SQLite execution. Using stochastic resampling, the agent autonomously self-heals runtime execution errors, elevating the final **Valid-SQL rate to 97.0%** (+11.0% over the un-tuned base model).
-4. **Full-Stack Delivery**: Packaged with a typed **FastAPI REST API**, an **OLED dark-mode Web Dashboard**, a **GPU-accelerated Docker container**, and a **one-click Google Colab notebook** that works with sample or user-uploaded data.
+4. **Full-Stack Delivery**: Packaged with a typed **FastAPI REST API**, an a dependency-free **web dashboard** (schema browser, formatted SQL, per-attempt run record), a **GPU-accelerated Docker container**, and a **one-click Google Colab notebook** that works with sample or user-uploaded data.
 ---
 
 ## System Architecture
@@ -39,7 +39,7 @@ This project demonstrates a production-grade, privacy-first alternative:
 ```mermaid
 flowchart TD
     User([User / Analyst])
-    UI["<b>OLED Web Dashboard</b><br/><small>src/static/index.html</small>"]
+    UI["<b>Web Dashboard</b><br/><small>src/static/index.html</small>"]
 
     API["<b>FastAPI Backend</b><br/><small>src/api.py</small>"]
 
@@ -195,7 +195,7 @@ Fine-tuning was conducted natively on consumer desktop hardware:
 text-to-sql-analyst-agent/
 ├── README.md                           # Master project documentation & portfolio presentation
 ├── LICENSE                             # MIT Open Source License
-├── ENGINEERING_LOG.md                  # Comprehensive decision log (19 decisions, 6 incidents)
+├── ENGINEERING_LOG.md                  # Comprehensive decision log (21 decisions, 6 incidents)
 ├── pyproject.toml                      # Project metadata, pinned dependencies, tool configs
 ├── docker-compose.yml                  # Single-command GPU container configuration
 │
@@ -218,7 +218,7 @@ text-to-sql-analyst-agent/
 │   ├── test_gpu.py                     # GPU & bitsandbytes 4-bit NF4 sanity test harness
 │   ├── analyze_failures.py             # Categorizes failed benchmark predictions into error taxonomy
 │   └── static/
-│       └── index.html                  # Dark-mode analyst UI (Tailwind CSS, Prism.js, telemetry)
+│       └── index.html                  ## Web dashboard: schema browser, formatted SQL, run record (no external assets)
 ├── notebooks/
 │   └── analyst_agent_colab.ipynb       # Run-all Colab demo: sample databases + file upload, Gradio UI
 ├── tests/
