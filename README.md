@@ -5,14 +5,22 @@
 [![QLoRA](https://img.shields.io/badge/QLoRA-4--bit%20NF4-8A2BE2)](https://github.com/artidoro/qlora)
 [![LangGraph](https://img.shields.io/badge/LangGraph-Cyclic%20Agent-blue)](https://github.com/langchain-ai/langgraph)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.141.1-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com/)
-[![TailwindCSS](https://img.shields.io/badge/TailwindCSS-Dark%20OLED-38B2AC?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
 [![Docker](https://img.shields.io/badge/Docker-GPU%20Ready-2496ED?logo=docker&logoColor=white)](https://www.docker.com/)
 [![Spider Benchmark](https://img.shields.io/badge/Spider%20Dev-100%20Questions-orange)](https://yale-lily.github.io/spider)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Open in Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/Dhruvish-28/Analyst-Agent/blob/main/notebooks/analyst_agent_colab.ipynb)
 
 > **Autonomous, privacy-preserving Text-to-SQL analyst agent powered by a fine-tuned local language model (`Qwen2.5-Coder-3B-Instruct`), AST validation guards, and a self-healing LangGraph reflection loop running on consumer GPU hardware.**
 
 ---
+
+## Try It in 5 Minutes (No Install)
+
+1. Click the **Open in Colab** badge above.
+2. Choose **Runtime → Change runtime type → T4 GPU**, then **Runtime → Run all**.
+3. When the last cell finishes, ask questions in plain English. Pick one of the sample Spider databases, or upload your own `.sqlite`, `.db`, `.csv`, `.tsv` or `.xlsx` file (50 MB max).
+
+The first run takes about 5 minutes, mostly downloading the ~6 GB base model. Uploaded files stay inside your Colab session and are opened read-only.
 
 ## Overview
 
@@ -23,8 +31,7 @@ This project demonstrates a production-grade, privacy-first alternative:
 1. **Local Parameter-Efficient Fine-Tuning (PEFT)**: Fine-tuned `Qwen/Qwen2.5-Coder-3B-Instruct` with 4-bit QLoRA on a single **NVIDIA GeForce RTX 3060 12GB** under a tight **4.00 GB peak VRAM ceiling**, completing 1 epoch across 5,000 verified SQL pairs in **~30 minutes**.
 2. **Empirical Benchmarking**: Measured performance before and after fine-tuning against **100 fixed, unseen Spider dev benchmark questions** across 18 distinct SQLite databases. Fine-tuning boosted the **Valid-SQL rate from 86.0% to 95.0%** (a **64% reduction in syntax/schema errors**).
 3. **LangGraph Self-Healing Agent**: Built a cyclic state machine agent wrapping the model with `sqlglot` AST validation and read-only SQLite execution. Using stochastic resampling, the agent autonomously self-heals runtime execution errors, elevating the final **Valid-SQL rate to 97.0%** (+11.0% over the un-tuned base model).
-4. **Full-Stack Delivery**: Packaged with a typed **FastAPI REST API**, an **OLED dark-mode Web Dashboard**, and a **GPU-accelerated Docker container**.
-
+4. **Full-Stack Delivery**: Packaged with a typed **FastAPI REST API**, an **OLED dark-mode Web Dashboard**, a **GPU-accelerated Docker container**, and a **one-click Google Colab notebook** that works with sample or user-uploaded data.
 ---
 
 ## System Architecture
@@ -212,7 +219,8 @@ text-to-sql-analyst-agent/
 │   ├── analyze_failures.py             # Categorizes failed benchmark predictions into error taxonomy
 │   └── static/
 │       └── index.html                  # Dark-mode analyst UI (Tailwind CSS, Prism.js, telemetry)
-│
+├── notebooks/
+│   └── analyst_agent_colab.ipynb       # Run-all Colab demo: sample databases + file upload, Gradio UI
 ├── tests/
 │   ├── test_sql_tools.py               # Unit tests for read-only URI, timeouts, and AST guards
 │   └── test_api.py                     # Integration tests for FastAPI endpoints & agent execution
@@ -241,7 +249,11 @@ text-to-sql-analyst-agent/
 
 ## Quickstart & Installation
 
-### Option 1: Native Local Setup (Recommended for Windows / Linux)
+### Option 1: Google Colab (Easiest, Free GPU)
+
+Open [`notebooks/analyst_agent_colab.ipynb`](notebooks/analyst_agent_colab.ipynb) in Colab with a T4 GPU runtime and run all cells. No local setup, GPU or Docker needed.
+
+### Option 2: Native Local Setup (Recommended for Windows / Linux)
 
 #### 1. Clone & Setup Virtual Environment
 
@@ -305,7 +317,7 @@ Open your browser to: **`http://localhost:8000`**
 
 ---
 
-### Option 2: Docker Deployment (GPU-Accelerated)
+### Option 3: Docker Deployment (GPU-Accelerated)
 
 Prerequisites:
 1. Docker Desktop with WSL2 backend (Windows) or NVIDIA Container Toolkit (Linux).
@@ -347,6 +359,21 @@ python src/evaluate_agent.py --strategy error_feedback --max-retries 3
 Results are saved automatically to `results/` in both JSON and CSV formats.
 
 ---
+## Using Your Own Data
+
+The Colab notebook accepts:
+
+| Input | How it is handled |
+| :--- | :--- |
+| `.sqlite` / `.db` | Used directly (read-only) |
+| `.csv` / `.tsv` | Converted to a single SQLite table |
+| `.xlsx` | Each sheet becomes a table |
+
+Column names are cleaned to `snake_case`, and files are capped at 50 MB. The model was trained on prompts of at most 1,024 tokens, so for databases with many tables only the tables matching your question (plus tables they reference through foreign keys) are sent to the model.
+
+**Limitations:**
+- **SQLite only.** Connecting to Postgres or MySQL is not supported yet.
+- **Expect lower accuracy than on Spider.** Real-world schemas are messier, and a 3B model struggles most with multi-table joins and ambiguous column names (see the failure analysis above). Always read the generated SQL before trusting a result.
 
 ## Future Roadmap
 
@@ -355,6 +382,8 @@ Results are saved automatically to `results/` in both JSON and CSV formats.
 3. **Schema Graph Pruning**: Implement networkx-based foreign key pathfinding to inject minimal relevant table subgraphs rather than complete database DDLs.
 4. **Multi-Turn Training**: Fine-tune on synthetic (Error, Corrected SQL) tuples to align the model specifically for conversational error feedback.
 5. **Natural Language Result Summarization**: Integrate a lightweight secondary local LLM call to synthesize table outputs into business insights.
+6. **Postgres / MySQL Support**: Connect to live databases, using `sqlglot` to transpile the model's SQLite output and `information_schema` for schema extraction.
+7. **Publish to Hugging Face Hub**: Host the adapter and merged weights so users can skip the merge step.
 
 ---
 
