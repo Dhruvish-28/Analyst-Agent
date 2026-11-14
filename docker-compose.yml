@@ -1,0 +1,25 @@
+services:
+  text-to-sql-agent:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    container_name: text-to-sql-analyst-agent
+    ports:
+      - "8000:8000"
+    environment:
+      - NVIDIA_VISIBLE_DEVICES=all
+      - NVIDIA_DRIVER_CAPABILITIES=compute,utility
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
+    volumes:
+      # Optional live mounts for quick iteration on databases or adapter
+      - ./data/spider_db:/app/data/spider_db:ro
+      - ./output/final_adapter:/app/output/final_adapter:ro
+      # Mount host Hugging Face cache so Docker doesn't re-download the 6GB base model
+      - ~/.cache/huggingface:/root/.cache/huggingface
+    restart: unless-stopped

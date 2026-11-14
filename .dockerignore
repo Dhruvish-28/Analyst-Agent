@@ -1,0 +1,27 @@
+# Git and cache
+.git/
+.gitignore
+.cache/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Local virtual environments
+.venv/
+env/
+venv/
+
+# Intermediate checkpoints & merged models (saves ~15GB of build context)
+output/checkpoints/
+output/merged_model/
+
+# Raw dataset downloads and local results
+data/raw/
+results/
+tests/
+
+# Documentation and agent scratchpads
+*.md
+!README.md
+.agents/
