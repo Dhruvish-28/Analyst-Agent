@@ -243,8 +243,8 @@ E:\Projects\SQL\
 #### 1. Clone & Setup Virtual Environment
 
 ```bash
-git clone https://github.com/your-username/text-to-sql-agent.git
-cd text-to-sql-agent
+git https://github.com/Dhruvish-28/Analyst-Agent.git
+cd Analyst-Agent
 
 # Create virtual environment with Python 3.11
 python -m venv .venv
