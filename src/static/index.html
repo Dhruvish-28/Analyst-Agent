@@ -1,857 +1,787 @@
-<!DOCTYPE html>
-<html lang="en" class="dark">
+<!doctype html>
+<html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Text-to-SQL Analyst Agent | Qwen2.5-Coder + LangGraph</title>
-  
-  <!-- Google Fonts: IBM Plex Sans & JetBrains Mono -->
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
-  
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      darkMode: 'class',
-      theme: {
-        extend: {
-          fontFamily: {
-            sans: ['"IBM Plex Sans"', 'sans-serif'],
-            mono: ['"JetBrains Mono"', 'monospace'],
-          },
-          colors: {
-            brand: {
-              50: '#f0fdf4',
-              500: '#22c55e',
-              600: '#16a34a',
-            },
-            slate: {
-              850: '#151e2e',
-              900: '#0f172a',
-              950: '#090d16',
-            }
-          }
-        }
-      }
-    }
-  </script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light">
+<title>Analyst Agent</title>
+<style>
+/* No external fonts, scripts or icons: this page makes no network requests except to its own API. */
+:root {
+  --paper: #f2f5f3;
+  --sheet: #ffffff;
+  --ink: #12202c;
+  --ink-2: #44545f;
+  --ink-3: #5c6b75;
+  --rule: #cdd7d2;
+  --rule-strong: #9fb0a8;
+  --band: #e7f0e9;
+  --accent: #2a3fd1;
+  --accent-deep: #1d2d9c;
+  --accent-wash: #eef0fc;
+  --ok: #1b6e45;
+  --ok-wash: #e3f1e8;
+  --bad: #ad3320;
+  --bad-wash: #faeae6;
+  --warn: #8f5a05;
+  --warn-wash: #fbf1dc;
+  --serif: Charter, "Iowan Old Style", "Sitka Text", Cambria, "Palatino Linotype", Georgia, serif;
+  --mono: ui-monospace, "Cascadia Code", "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  color-scheme: light;
+}
 
-  <!-- Prism.js for SQL Syntax Highlighting -->
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font: 15px/1.55 var(--serif);
+  -webkit-font-smoothing: antialiased;
+}
+button, select, input, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+[hidden] { display: none !important; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.skip { position: absolute; left: 8px; top: -48px; background: var(--ink); color: #fff; padding: 8px 12px; border-radius: 3px; z-index: 10; }
+.skip:focus { top: 8px; }
 
-  <!-- Lucide Icons -->
-  <script src="https://unpkg.com/lucide@latest"></script>
+.i { width: 1em; height: 1em; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-  <style>
-    /* Custom Scrollbars */
-    ::-webkit-scrollbar {
-      width: 6px;
-      height: 6px;
-    }
-    ::-webkit-scrollbar-track {
-      background: #0f172a;
-    }
-    ::-webkit-scrollbar-thumb {
-      background: #334155;
-      border-radius: 3px;
-    }
-    ::-webkit-scrollbar-thumb:hover {
-      background: #475569;
-    }
-    pre[class*="language-"] {
-      margin: 0 !important;
-      background: #0b0f19 !important;
-      border-radius: 0.5rem;
-    }
-    code[class*="language-"] {
-      font-family: 'JetBrains Mono', monospace !important;
-      font-size: 0.85rem !important;
-    }
-  </style>
+/* ---------- header ---------- */
+.top {
+  display: flex; align-items: baseline; flex-wrap: wrap; gap: 6px 24px;
+  padding: 18px clamp(16px, 3vw, 40px) 14px;
+  border-bottom: 2px solid var(--ink);
+}
+.brand { margin: 0; font-size: 22px; line-height: 1.2; font-weight: 700; letter-spacing: -0.01em; }
+.tagline { margin: 0; flex: 1 1 260px; color: var(--ink-2); }
+.device { display: flex; align-items: center; gap: 8px; font-size: 13px; color: var(--ink-2); }
+.light { width: 8px; height: 8px; border-radius: 50%; background: var(--rule-strong); flex: none; }
+.light.up { background: var(--ok); }
+.light.off { background: var(--bad); }
+.light.cpu { background: var(--warn); }
+.top a { color: var(--ink-2); font-size: 13px; text-underline-offset: 3px; }
+.top a:hover { color: var(--accent); }
+
+.offline {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px;
+  margin: 0; padding: 12px clamp(16px, 3vw, 40px);
+  background: var(--bad-wash); color: var(--bad); border-bottom: 1px solid var(--bad);
+  font-size: 14px;
+}
+.offline code { font-family: var(--mono); font-size: 12.5px; background: #fff; border: 1px solid var(--rule); padding: 2px 6px; border-radius: 3px; color: var(--ink); }
+.offline button { margin-left: auto; }
+
+/* ---------- layout ---------- */
+.layout { display: grid; grid-template-columns: 272px minmax(0, 1fr) 340px; align-items: stretch; min-height: calc(100vh - 64px); }
+.rail { padding: 20px 20px 32px; border-right: 1px solid var(--rule); }
+.sheet { background: var(--sheet); padding: 28px clamp(16px, 3vw, 40px) 48px; min-width: 0; }
+.tape-col { padding: 20px; border-left: 1px solid var(--rule); min-width: 0; }
+@media (min-width: 1181px) {
+  .tape-inner { position: sticky; top: 16px; max-height: calc(100vh - 32px); overflow: auto; }
+}
+@media (max-width: 1180px) {
+  .layout { grid-template-columns: 272px minmax(0, 1fr); }
+  .tape-col { grid-column: 1 / -1; border-left: 0; border-top: 1px solid var(--rule); position: static; max-height: none; }
+  .tape-inner { max-width: 560px; }
+}
+@media (max-width: 820px) {
+  .layout { grid-template-columns: minmax(0, 1fr); }
+  .rail { border-right: 0; border-bottom: 1px solid var(--rule); }
+}
+
+/* ---------- controls ---------- */
+.field-label { display: block; font-weight: 600; margin-bottom: 6px; }
+.select {
+  width: 100%; height: 38px; padding: 0 34px 0 10px;
+  background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath d='M2.5 4.5 6 8l3.5-3.5' fill='none' stroke='%2312202c' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+  border: 1px solid var(--rule-strong); border-radius: 3px; appearance: none; -webkit-appearance: none;
+}
+.meta { margin: 8px 0 0; font-size: 13px; color: var(--ink-3); }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+  height: 40px; padding: 0 18px; border: 1px solid var(--accent); border-radius: 3px;
+  background: var(--accent); color: #fff; font-weight: 600;
+}
+.btn:hover { background: var(--accent-deep); border-color: var(--accent-deep); }
+.btn[disabled] { opacity: 0.6; cursor: progress; }
+.btn-quiet {
+  display: inline-flex; align-items: center; gap: 6px; height: 30px; padding: 0 10px;
+  background: transparent; border: 1px solid var(--rule-strong); border-radius: 3px; font-size: 13px; color: var(--ink);
+}
+.btn-quiet:hover { border-color: var(--ink); background: #fff; }
+.linkish { background: none; border: 0; padding: 0; text-align: left; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; text-decoration-thickness: 1px; }
+.linkish:hover { color: var(--accent-deep); }
+
+/* ---------- schema browser ---------- */
+.tables { margin-top: 22px; }
+.tables summary { font-size: 15px; font-weight: 600; cursor: pointer; margin-bottom: 4px; width: fit-content; }
+.hint { margin: 0 0 10px; font-size: 13px; color: var(--ink-3); }
+.schema { list-style: none; margin: 0; padding: 0; border-top: 1px solid var(--rule); }
+.tbl { border-bottom: 1px solid var(--rule); }
+.tbl-row { display: flex; align-items: center; }
+.tbl-toggle {
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 6px; padding: 8px 0;
+  background: none; border: 0; text-align: left;
+}
+.tbl-toggle .i { transition: transform 0.12s; color: var(--ink-3); }
+.tbl-toggle[aria-expanded="true"] .i { transform: rotate(90deg); }
+.tbl-name { font-family: var(--mono); font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; }
+.tbl-count { margin-left: auto; font-size: 12px; color: var(--ink-3); padding-right: 6px; white-space: nowrap; }
+.tbl-add { width: 26px; height: 26px; display: grid; place-items: center; background: none; border: 1px solid transparent; border-radius: 3px; color: var(--ink-3); }
+.tbl-add:hover { border-color: var(--rule-strong); color: var(--accent); background: #fff; }
+.cols { list-style: none; margin: 0 0 8px 18px; padding: 0; }
+.col { width: 100%; display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 8px; padding: 3px 4px; background: none; border: 0; border-radius: 3px; text-align: left; }
+.col:hover { background: #fff; }
+.col-name { font-family: var(--mono); font-size: 12.5px; }
+.col-type { font-size: 12px; color: var(--ink-3); }
+.col-key { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; color: var(--warn); }
+.col-ref { font-size: 12px; color: var(--ink-3); }
+
+/* ---------- question ---------- */
+.ask { margin: 0 0 8px; }
+.question {
+  display: block; width: 100%; min-height: 3.4em; resize: vertical; padding: 4px 0 10px;
+  background: transparent; border: 0; border-bottom: 2px solid var(--ink); border-radius: 0;
+  font: 400 24px/1.35 var(--serif); letter-spacing: -0.005em;
+}
+.question::placeholder { color: var(--ink-3); opacity: 1; }
+.question:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-bottom-color: var(--accent); }
+.ask-row { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; margin-top: 14px; }
+.run-summary { color: var(--ink-2); font-size: 13px; }
+.keys { margin-left: auto; font-size: 13px; color: var(--ink-3); }
+.q-error { margin: 8px 0 0; color: var(--bad); font-size: 14px; }
+
+.options { margin: 12px 0 0; }
+.options summary { cursor: pointer; font-size: 13px; color: var(--ink-2); width: fit-content; text-underline-offset: 3px; }
+.options summary:hover { color: var(--accent); text-decoration: underline; }
+.options-body { margin-top: 12px; padding: 14px 16px; border: 1px solid var(--rule); border-left: 3px solid var(--rule-strong); max-width: 620px; }
+.options fieldset { border: 0; padding: 0; margin: 0 0 14px; }
+.options legend { font-weight: 600; padding: 0; margin-bottom: 6px; }
+.choice { display: flex; gap: 10px; padding: 6px 0; cursor: pointer; }
+.choice input { margin: 4px 0 0; accent-color: var(--accent); }
+.choice b { font-weight: 600; }
+.choice span { display: block; font-size: 13px; color: var(--ink-2); }
+.count-input { width: 4.2em; height: 34px; padding: 0 8px; border: 1px solid var(--rule-strong); border-radius: 3px; background: #fff; }
+
+/* ---------- output ---------- */
+#output { margin-top: 28px; }
+.empty .lead { font-size: 20px; line-height: 1.4; margin: 0 0 14px; }
+.examples { list-style: none; margin: 0 0 18px; padding: 0; }
+.examples li { padding: 7px 0; border-top: 1px solid var(--rule); }
+.examples li:last-child { border-bottom: 1px solid var(--rule); }
+.examples .linkish { font-size: 16px; }
+.tip { margin: 0; max-width: 56ch; color: var(--ink-2); font-size: 14px; }
+
+.working { display: flex; align-items: baseline; gap: 14px; padding: 18px 0; border-top: 1px solid var(--rule); border-bottom: 1px solid var(--rule); }
+.working .t { font-family: var(--mono); font-variant-numeric: tabular-nums; font-size: 14px; color: var(--ink-2); }
+.working p { margin: 0; color: var(--ink-2); }
+
+.block-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 0 8px; min-height: 30px; }
+.block-head h2 { margin: 0; font-size: 16px; font-weight: 600; }
+.block-head .sub { font-weight: 400; color: var(--ink-3); font-size: 14px; }
+.block + .block { margin-top: 28px; }
+
+.sql {
+  margin: 0; padding: 14px 16px; overflow-x: auto;
+  background: var(--accent-wash); border-left: 3px solid var(--accent);
+  font: 13.5px/1.65 var(--mono); tab-size: 2; white-space: pre;
+}
+.sql .kw { color: var(--accent-deep); font-weight: 700; }
+.sql .fn { color: #0b6068; }
+.sql .str { color: var(--ok); }
+.sql .num { color: #8a5200; }
+.sql .cm { color: var(--ink-3); font-style: italic; }
+.verify { margin: 8px 0 0; max-width: 62ch; font-size: 13.5px; color: var(--ink-2); }
+
+.gridwrap { max-height: min(62vh, 560px); overflow: auto; border: 1px solid var(--rule); }
+table.grid { border-collapse: collapse; width: 100%; font-variant-numeric: tabular-nums; }
+.grid th, .grid td { padding: 6px 12px; text-align: left; white-space: nowrap; }
+.grid thead th { position: sticky; top: 0; background: var(--paper); border-bottom: 2px solid var(--ink); font-weight: 600; font-size: 13px; z-index: 1; }
+.grid tbody tr:nth-child(even) td { background: var(--band); }
+.grid td { font-family: var(--mono); font-size: 13px; max-width: 34ch; overflow: hidden; text-overflow: ellipsis; }
+.grid .idx { width: 1%; text-align: right; color: var(--ink-3); border-right: 1px solid var(--rule); font-size: 12px; }
+.grid .r { text-align: right; }
+.grid .null { color: var(--ink-3); font-style: italic; font-family: var(--serif); }
+.grid-empty { padding: 18px 12px; color: var(--ink-2); }
+
+.fail-box { padding: 14px 16px; background: var(--bad-wash); border-left: 3px solid var(--bad); }
+.fail-box h2 { margin: 0 0 6px; font-size: 16px; color: var(--bad); }
+.fail-box p { margin: 0 0 8px; }
+.fail-box .err { font-family: var(--mono); font-size: 13px; color: var(--ink); word-break: break-word; }
+.fail-box ul { margin: 6px 0 0; padding-left: 20px; }
+
+/* ---------- run record (tape) ---------- */
+.tape { background: var(--sheet); border-left: 1px dashed var(--rule-strong); border-right: 1px dashed var(--rule-strong); }
+.perf { height: 14px; background: radial-gradient(circle at 7px 7px, var(--paper) 3px, transparent 3.5px) 0 0 / 14px 14px repeat-x; }
+.perf.top-e { border-bottom: 1px dashed var(--rule-strong); }
+.perf.bot-e { border-top: 1px dashed var(--rule-strong); }
+.tape-body { padding: 14px 16px; }
+.tape h2 { margin: 0 0 2px; font-size: 16px; font-weight: 600; }
+.tape .when { margin: 0 0 12px; font-size: 13px; color: var(--ink-3); }
+.entries { list-style: none; margin: 0; padding: 0; counter-reset: attempt; }
+.entry { padding: 10px 0; border-top: 1px dashed var(--rule); }
+.entry-head { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.entry-head b { font-weight: 600; }
+.badge { font-size: 13px; font-weight: 600; }
+.badge.ok { color: var(--ok); }
+.badge.bad { color: var(--bad); }
+.checks { list-style: none; display: flex; flex-wrap: wrap; gap: 4px 14px; margin: 6px 0 0; padding: 0; font-size: 13px; }
+.checks li { display: inline-flex; align-items: center; gap: 4px; }
+.checks .pass { color: var(--ok); }
+.checks .fail { color: var(--bad); }
+.checks .skip-c { color: var(--ink-3); }
+.entry details { margin-top: 6px; }
+.entry summary { cursor: pointer; font-size: 13px; color: var(--ink-2); width: fit-content; }
+.entry pre { margin: 6px 0 0; padding: 8px 10px; background: var(--paper); font: 12px/1.55 var(--mono); white-space: pre-wrap; word-break: break-word; }
+.entry .err { margin: 6px 0 0; font-size: 13px; color: var(--bad); word-break: break-word; }
+.total { margin: 0; padding: 10px 0 0; border-top: 2px solid var(--ink); display: flex; justify-content: space-between; gap: 8px; font-weight: 600; }
+.total span:last-child { font-variant-numeric: tabular-nums; font-weight: 400; color: var(--ink-2); }
+.tape-empty { margin: 0; color: var(--ink-2); font-size: 14px; }
+
+.rules { margin: 18px 0 0; padding: 12px 0 0; border-top: 1px solid var(--rule); font-size: 13px; color: var(--ink-2); }
+.rules h3 { margin: 0 0 4px; font-size: 13px; font-weight: 600; color: var(--ink); }
+.rules ul { margin: 0; padding-left: 18px; }
+
+.history { margin: 18px 0 0; padding: 12px 0 0; border-top: 1px solid var(--rule); }
+.history h3 { margin: 0 0 4px; font-size: 13px; font-weight: 600; }
+.history ul { list-style: none; margin: 0; padding: 0; }
+.history li + li { border-top: 1px solid var(--rule); }
+.hist-btn { width: 100%; display: flex; gap: 8px; align-items: baseline; padding: 6px 2px; background: none; border: 0; text-align: left; font-size: 13px; }
+.hist-btn:hover .hq { color: var(--accent); text-decoration: underline; }
+.hist-btn[aria-current="true"] .hq { font-weight: 600; }
+.hq { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.hs { flex: none; }
+.hs.ok { color: var(--ok); }
+.hs.bad { color: var(--bad); }
+
+/* the one moment of motion: the run record prints top to bottom */
+@media (prefers-reduced-motion: no-preference) {
+  .print { animation: print 260ms ease-out both; }
+}
+@keyframes print { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0 0 0 0); } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
 </head>
-<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
+<body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-check" viewBox="0 0 16 16"><path d="M3 8.5l3.2 3.2L13 4.8"/></symbol>
+  <symbol id="i-x" viewBox="0 0 16 16"><path d="M4 4l8 8M12 4l-8 8"/></symbol>
+  <symbol id="i-dash" viewBox="0 0 16 16"><path d="M4.5 8h7"/></symbol>
+  <symbol id="i-chev" viewBox="0 0 16 16"><path d="M6 3.5L10.5 8 6 12.5"/></symbol>
+  <symbol id="i-plus" viewBox="0 0 16 16"><path d="M8 3.5v9M3.5 8h9"/></symbol>
+  <symbol id="i-copy" viewBox="0 0 16 16"><rect x="5.5" y="5.5" width="8" height="8" rx="1.2"/><path d="M10.5 5.5V3.7c0-.7-.5-1.2-1.2-1.2H3.7c-.7 0-1.2.5-1.2 1.2v5.6c0 .7.5 1.2 1.2 1.2h1.8"/></symbol>
+  <symbol id="i-down" viewBox="0 0 16 16"><path d="M8 2.5v8M4.8 7.6L8 10.8l3.2-3.2M3 13.2h10"/></symbol>
+  <symbol id="i-key" viewBox="0 0 16 16"><circle cx="5.2" cy="10.8" r="2.4"/><path d="M7 9l6-6M10.8 5.2l1.7 1.7"/></symbol>
+</svg>
 
-  <!-- ================= TOP NAVIGATION & HARDWARE TELEMETRY ================= -->
-  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
-      
-      <!-- Logo & Title -->
-      <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-          <i data-lucide="database" class="w-5 h-5"></i>
-        </div>
-        <div>
-          <div class="flex items-center space-x-2">
-            <span class="font-bold text-base tracking-tight text-white">Text-to-SQL Analyst</span>
-            <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">LangGraph Agent</span>
-          </div>
-          <p class="text-xs text-slate-400 font-mono">Qwen2.5-Coder-3B QLoRA • Self-Healing Loop</p>
-        </div>
+<a class="skip" href="#question">Skip to question</a>
+
+<header class="top">
+  <h1 class="brand">Analyst Agent</h1>
+  <p class="tagline">Ask a SQLite database in plain English. The model runs on this machine.</p>
+  <div class="device" id="device"><span class="light" id="light"></span><span id="device-text">Checking the model…</span></div>
+  <a href="/docs" target="_blank" rel="noopener">API docs</a>
+</header>
+
+<p class="offline" id="offline" role="alert" hidden>
+  <span>Can't reach the API at <code id="offline-url">http://127.0.0.1:8000</code>. Start it with</span>
+  <code>python -m uvicorn src.api:app --host 127.0.0.1 --port 8000</code>
+  <button class="btn-quiet" type="button" id="retry-conn">Retry connection</button>
+</p>
+
+<noscript><p class="offline">This page needs JavaScript to talk to the API.</p></noscript>
+
+<div class="layout">
+  <aside class="rail" aria-label="Database and schema">
+    <label class="field-label" for="db">Database</label>
+    <select class="select" id="db"><option>Loading…</option></select>
+    <p class="meta" id="db-meta"></p>
+
+    <details class="tables" id="tables" open>
+      <summary>Tables</summary>
+      <p class="hint">Click a column to add its name to your question. Using the real table and column names helps the model.</p>
+      <ul class="schema" id="schema"></ul>
+    </details>
+  </aside>
+
+  <main class="sheet" id="main">
+    <form class="ask" id="ask" novalidate>
+      <label class="sr-only" for="question">Your question</label>
+      <textarea class="question" id="question" rows="2" placeholder="Ask a question about this database"></textarea>
+      <p class="q-error" id="q-error" role="alert" hidden></p>
+      <div class="ask-row">
+        <button class="btn" type="submit" id="run">Run query</button>
+        <span class="run-summary" id="run-summary"></span>
+        <span class="keys">Ctrl or ⌘ + Enter also runs</span>
       </div>
-
-      <!-- Live GPU & Benchmark Telemetry -->
-      <div class="flex items-center space-x-3">
-        
-        <!-- Benchmark Badge -->
-        <div class="hidden md:flex items-center space-x-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700/60 text-xs">
-          <span class="text-slate-400 font-medium">Spider Benchmark:</span>
-          <span class="text-emerald-400 font-bold font-mono">97.0% Valid-SQL</span>
-          <span class="text-slate-600">|</span>
-          <span class="text-sky-400 font-semibold font-mono">58.0% EX</span>
+      <details class="options" id="options">
+        <summary>Run options</summary>
+        <div class="options-body">
+          <fieldset>
+            <legend>When a query fails</legend>
+            <label class="choice"><input type="radio" name="strategy" value="resample" checked>
+              <div><b>Ask again</b><span>Resamples with some randomness. Best on the benchmark: 97% of queries valid.</span></div></label>
+            <label class="choice"><input type="radio" name="strategy" value="error_feedback">
+              <div><b>Show the model its error</b><span>Sends the error back and asks for a fix. 95% valid; the model wasn't trained for this format.</span></div></label>
+          </fieldset>
+          <label class="field-label" for="attempts">Maximum attempts</label>
+          <input class="count-input" id="attempts" type="number" min="1" max="5" value="3">
         </div>
+      </details>
+    </form>
 
-        <!-- GPU Hardware Pill -->
-        <div id="hardware-pill" class="flex items-center space-x-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700/60 text-xs">
-          <span class="relative flex h-2 w-2">
-            <span id="gpu-pulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-            <span id="gpu-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-          </span>
-          <span id="gpu-name" class="font-medium text-slate-300">RTX 3060 12GB</span>
-          <span class="text-slate-600">|</span>
-          <span id="vram-stat" class="font-mono text-slate-400">VRAM: 1.0 / 12.0 GB</span>
-        </div>
-
-        <!-- API Docs link -->
-        <a href="/docs" target="_blank" class="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-slate-800 transition cursor-pointer" title="Open API Documentation (Swagger)">
-          <i data-lucide="file-code" class="w-4 h-4"></i>
-        </a>
-      </div>
-
-    </div>
-  </header>
-
-  <!-- ================= CONNECTION STATUS BANNER (WHEN BACKEND DISCONNECTED) ================= -->
-  <div id="connection-banner" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
-    <div class="bg-amber-950/50 border border-amber-600/50 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-200">
-      <div class="flex items-center gap-2">
-        <i data-lucide="wifi-off" class="w-4 h-4 text-amber-400 flex-shrink-0"></i>
-        <span>
-          <strong>Backend Server Disconnected:</strong> Cannot connect to FastAPI API at <code class="font-mono bg-slate-900 px-1.5 py-0.5 rounded text-amber-300">http://127.0.0.1:8000</code>.
-          Start the server in your terminal with: <code class="font-mono bg-slate-900 px-1.5 py-0.5 rounded text-emerald-400">.venv\Scripts\python -m uvicorn src.api:app --port 8000</code>
-        </span>
-      </div>
-      <button onclick="fetchHealth(); fetchDatabases();" class="px-3 py-1 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 rounded text-amber-100 font-semibold transition cursor-pointer self-end sm:self-auto">
-        Retry Connection
-      </button>
-    </div>
-  </div>
-
-  <!-- ================= MAIN LAYOUT ================= -->
-  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
-
-    <!-- ================= LEFT SIDEBAR (DATABASE & CONFIGURATION) ================= -->
-    <aside class="lg:col-span-4 space-y-6">
-      
-      <!-- Database Selector Card -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-4">
-        <div class="flex items-center justify-between">
-          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-            <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
-            Target Database
-          </label>
-          <span id="db-count-badge" class="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">18 Available</span>
-        </div>
-
-        <div>
-          <select id="db-select" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition cursor-pointer">
-            <option value="" disabled selected>Loading databases...</option>
-          </select>
-        </div>
-
-        <!-- Database Metadata & Tables -->
-        <div id="db-metadata-box" class="space-y-3 pt-2 border-t border-slate-800/80">
-          <div class="flex items-center justify-between text-xs text-slate-400">
-            <span>Tables:</span>
-            <span id="db-size-stat" class="font-mono text-slate-500"></span>
-          </div>
-          <div id="table-chips" class="flex flex-wrap gap-1.5">
-            <span class="text-xs text-slate-500 italic">Select a database to view tables</span>
-          </div>
-
-          <!-- Collapsible DDL Schema Viewer -->
-          <details class="group pt-2">
-            <summary class="text-xs font-medium text-slate-400 hover:text-emerald-400 cursor-pointer flex items-center justify-between list-none py-1">
-              <span class="flex items-center gap-1">
-                <i data-lucide="code" class="w-3.5 h-3.5"></i>
-                View Full Schema (DDL)
-              </span>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 group-open:rotate-180 transition-transform"></i>
-            </summary>
-            <div class="mt-2 max-h-48 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950 p-2.5">
-              <pre><code id="schema-code" class="language-sql text-xs font-mono text-slate-300">-- Schema will render here</code></pre>
-            </div>
-          </details>
-        </div>
-      </div>
-
-      <!-- Advanced Agent Settings (Collapsible) -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-sm overflow-hidden">
-        <details class="group">
-          <summary class="p-4 flex items-center justify-between cursor-pointer list-none select-none hover:bg-slate-850/50 transition">
-            <div class="flex items-center gap-2">
-              <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
-              <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Advanced Agent Settings</span>
-            </div>
-            <div class="flex items-center gap-2">
-              <span id="active-strategy-pill" class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Resample (Active)</span>
-              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
-            </div>
-          </summary>
-
-          <div class="p-4 pt-2 border-t border-slate-800 space-y-4">
-            <!-- Strategy Selector -->
-            <div class="space-y-2">
-              <label class="text-xs text-slate-400 block font-medium">Self-Healing Strategy</label>
-              
-              <div class="space-y-2">
-                <!-- Option 1: Resample -->
-                <button type="button" id="strat-resample" onclick="setStrategy('resample')"
-                  class="w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-emerald-500 bg-emerald-500/10 text-emerald-300">
-                  <div class="flex items-center justify-between font-semibold">
-                    <span class="flex items-center gap-1.5">
-                      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
-                      Resample (Recommended)
-                    </span>
-                    <span class="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">97% Valid-SQL</span>
-                  </div>
-                  <p class="text-[11px] text-slate-400 font-normal mt-1 leading-relaxed">
-                    Generates alternative variations of the query if the first attempt errors. Best for general querying.
-                  </p>
-                </button>
-
-                <!-- Option 2: Error Feedback -->
-                <button type="button" id="strat-feedback" onclick="setStrategy('error_feedback')"
-                  class="w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-slate-700 bg-slate-950 text-slate-400 hover:border-slate-600">
-                  <div class="flex items-center justify-between font-semibold text-slate-300">
-                    <span class="flex items-center gap-1.5">
-                      <span class="w-2 h-2 rounded-full bg-slate-600"></span>
-                      Error Feedback
-                    </span>
-                    <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Multi-Turn</span>
-                  </div>
-                  <p class="text-[11px] text-slate-500 font-normal mt-1 leading-relaxed">
-                    Passes the database error message back to the model to ask for a targeted correction.
-                  </p>
-                </button>
-              </div>
-            </div>
-
-            <!-- Max Retries Slider -->
-            <div class="space-y-1.5 pt-2 border-t border-slate-800/80">
-              <div class="flex items-center justify-between text-xs">
-                <span class="text-slate-400 font-medium">Max Retry Attempts</span>
-                <span id="retry-val-display" class="font-mono text-emerald-400 font-semibold">3 attempts</span>
-              </div>
-              <input id="max-retries-slider" type="range" min="1" max="5" value="3" 
-                class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-emerald-500"
-                oninput="document.getElementById('retry-val-display').innerText = this.value + ' attempts'">
-              <p class="text-[10px] text-slate-500">Number of self-healing retry cycles if query fails AST or SQLite execution.</p>
-            </div>
-          </div>
-        </details>
-      </div>
-
-      <!-- Sample Questions for Selected Database -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
-        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
-          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
-          Sample Benchmark Questions
-        </label>
-        <p class="text-xs text-slate-400">Click any prompt to populate the analyst query:</p>
-        <div id="sample-questions" class="space-y-2">
-          <!-- Dynamically populated -->
-        </div>
-      </div>
-
-    </aside>
-
-    <!-- ================= RIGHT COLUMN (QUERY CONSOLE, TRACE & DATA GRID) ================= -->
-    <section class="lg:col-span-8 space-y-6">
-      
-      <!-- Query Input Console -->
-      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
-        
-        <div class="flex items-center justify-between">
-          <label for="question-input" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <i data-lucide="message-square" class="w-4 h-4 text-emerald-400"></i>
-            Natural Language Question
-          </label>
-          <span class="text-xs text-slate-500 font-mono hidden sm:inline">Press Ctrl + Enter to run</span>
-        </div>
-
-        <div class="relative">
-          <textarea id="question-input" rows="3" 
-            placeholder="e.g. How many singers are there in each country, ordered by count descending?"
-            class="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition font-sans placeholder-slate-500 resize-none"></textarea>
-        </div>
-
-        <div class="flex items-center justify-between pt-1">
-          <div class="flex items-center gap-2 text-xs text-slate-400">
-            <span class="flex items-center gap-1">
-              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
-              Read-Only SQLite URI
-            </span>
-            <span>•</span>
-            <span class="flex items-center gap-1">
-              <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i>
-              sqlglot AST Guard
-            </span>
-          </div>
-
-          <button id="run-btn" onclick="submitQuery()"
-            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-950 font-semibold text-sm rounded-lg flex items-center gap-2 shadow-lg shadow-emerald-950/30 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
-            <i id="btn-icon" data-lucide="play" class="w-4 h-4 fill-current"></i>
-            <span id="btn-text">Run Query</span>
-          </button>
-        </div>
-
-      </div>
-
-      <!-- Live Execution Banner (Hidden initially) -->
-      <div id="metrics-banner" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
-        <div class="flex items-center space-x-3">
-          <div id="status-badge" class="px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
-            <span>SUCCESS</span>
-          </div>
-          <span id="heal-badge" class="hidden px-2.5 py-1 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
-            <i data-lucide="activity" class="w-3.5 h-3.5"></i>
-            <span>SELF-HEALED</span>
-          </span>
-        </div>
-
-        <div class="flex items-center space-x-6 text-xs text-slate-400 font-mono">
-          <div>
-            Latency: <span id="stat-latency" class="text-slate-200 font-semibold">0.00s</span>
-          </div>
-          <div>
-            Attempts: <span id="stat-attempts" class="text-slate-200 font-semibold">1</span>
-          </div>
-          <div>
-            Rows: <span id="stat-rows" class="text-slate-200 font-semibold">0</span>
-          </div>
-        </div>
-      </div>
-
-      <!-- Generated SQL Card -->
-      <div id="sql-card" class="hidden bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        <div class="bg-slate-850 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
-          <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
-            <i data-lucide="terminal" class="w-4 h-4 text-emerald-400"></i>
-            Generated SQLite Query
-          </div>
-          <button onclick="copySql()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition">
-            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
-            <span id="copy-btn-text">Copy SQL</span>
-          </button>
-        </div>
-        <div class="p-4 bg-slate-950 overflow-x-auto">
-          <pre><code id="output-sql" class="language-sql text-sm font-mono text-emerald-300"></code></pre>
-        </div>
-      </div>
-
-      <!-- Agent Trace & Self-Healing Log (Expandable) -->
-      <div id="trace-card" class="hidden bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        <details class="group" open>
-          <summary class="bg-slate-850 px-4 py-3 border-b border-slate-800 flex items-center justify-between cursor-pointer list-none">
-            <div class="flex items-center gap-2 text-xs font-semibold text-slate-300 uppercase tracking-wider">
-              <i data-lucide="workflow" class="w-4 h-4 text-emerald-400"></i>
-              LangGraph Execution & Self-Healing Trace
-            </div>
-            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform"></i>
-          </summary>
-          <div id="trace-steps" class="p-4 space-y-3 bg-slate-950/50">
-            <!-- Dynamically populated with attempts and errors -->
-          </div>
-        </details>
-      </div>
-
-      <!-- Data Result Table Card -->
-      <div id="table-card" class="hidden bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
-        <div class="bg-slate-850 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
-          <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
-            <i data-lucide="table-2" class="w-4 h-4 text-emerald-400"></i>
-            Database Execution Results
-          </div>
-          <div class="flex items-center space-x-3">
-            <span id="row-count-badge" class="text-xs font-mono text-slate-400">0 rows</span>
-            <button onclick="exportCsv()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition">
-              <i data-lucide="download" class="w-3.5 h-3.5"></i>
-              <span>Export CSV</span>
-            </button>
-          </div>
-        </div>
-
-        <div class="overflow-x-auto max-h-96">
-          <table id="result-table" class="w-full text-left border-collapse text-xs">
-            <thead class="bg-slate-900/90 text-slate-300 font-semibold border-b border-slate-800 sticky top-0">
-              <tr id="table-head-row">
-                <!-- Columns -->
-              </tr>
-            </thead>
-            <tbody id="table-body" class="divide-y divide-slate-800/60 font-mono text-slate-300">
-              <!-- Rows -->
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      <!-- Empty / Standby Placeholder State -->
-      <div id="empty-state" class="border border-dashed border-slate-800 rounded-xl p-12 text-center space-y-3">
-        <div class="w-12 h-12 rounded-full bg-slate-900 text-slate-500 mx-auto flex items-center justify-center">
-          <i data-lucide="compass" class="w-6 h-6"></i>
-        </div>
-        <h3 class="text-sm font-semibold text-slate-300">Analyst Agent Standing By</h3>
-        <p class="text-xs text-slate-500 max-w-sm mx-auto">
-          Choose a target database, select a sample question or type your custom natural language query, then hit <strong class="text-slate-400">Run Query</strong>.
-        </p>
-      </div>
-
-    </section>
-
+    <div id="output" aria-live="off"></div>
+    <p class="sr-only" id="live" role="status" aria-live="polite"></p>
   </main>
 
-  <!-- ================= FOOTER ================= -->
-  <footer class="border-t border-slate-800 bg-slate-950 py-4 text-center text-xs text-slate-500">
-    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
-      <div>
-        Text-to-SQL Analyst Agent • Built with 
-        <span class="text-slate-300 font-medium">Qwen2.5-Coder-3B</span>, 
-        <span class="text-slate-300 font-medium">QLoRA</span>, 
-        <span class="text-slate-300 font-medium">LangGraph</span> & 
-        <span class="text-slate-300 font-medium">FastAPI</span>.
+  <aside class="tape-col" aria-label="Run record">
+    <div class="tape-inner">
+      <div class="tape">
+        <div class="perf top-e" aria-hidden="true"></div>
+        <div class="tape-body" id="tape"></div>
+        <div class="perf bot-e" aria-hidden="true"></div>
       </div>
-      <div class="font-mono text-[11px] text-slate-600">
-        NVIDIA RTX 3060 12GB • Evaluated on Spider Dev
+      <div class="rules">
+        <h3>What the agent can't do</h3>
+        <ul>
+          <li>Change the database: it opens read-only.</li>
+          <li>Run more than one statement, or anything but SELECT.</li>
+          <li>Run longer than 10 seconds.</li>
+          <li>Return more than 200 rows.</li>
+        </ul>
+      </div>
+      <div class="history" id="history" hidden>
+        <h3>Earlier runs this session</h3>
+        <ul id="history-list"></ul>
       </div>
     </div>
-  </footer>
+  </aside>
+</div>
 
-  <!-- ================= APPLICATION LOGIC (VANILLA JS) ================= -->
-  <script>
-    // Smart API Base:
-    // If page is loaded as a local file or from a different port (e.g. Live Server 5500),
-    // automatically point requests to the running FastAPI server on http://127.0.0.1:8000.
-    const API_BASE = (window.location.protocol === 'file:' || (window.location.port !== '8000' && window.location.port !== ''))
-      ? 'http://127.0.0.1:8000'
-      : '';
+<script>
+(() => {
+'use strict';
 
-    // Global Application State
-    const state = {
-      databases: [],
-      currentDb: null,
-      strategy: 'resample',
-      queryResult: null,
-      sampleQuestionsMap: {
-        'singer': [
-          "How many singers are there?",
-          "What is the average age of all singers?",
-          "List all singers ordered by age descending."
-        ],
-        'concert_singer': [
-          "How many concerts were held in each year?",
-          "What are the names of all singers who performed in New York?",
-          "Find the highest capacity stadium where a concert took place."
-        ],
-        'world_1': [
-          "Which country has the highest life expectancy?",
-          "List the top 5 countries by total population.",
-          "How many different government forms exist in Europe?"
-        ],
-        'tvshow': [
-          "What is the title and channel of each TV show?",
-          "Find the TV show with the highest viewer rating.",
-          "List all episodes released in 2018."
-        ],
-        'dog_kennels': [
-          "How many dogs are registered in the system?",
-          "List all breeds and their average weight.",
-          "Which kennel has the maximum number of dogs?"
-        ],
-        'car_1': [
-          "What is the average horsepower for 4-cylinder cars?",
-          "List all car models made in 1970 ordered by MPG.",
-          "Find the total number of cars produced by each automaker."
-        ],
-        'flight_2': [
-          "How many total flights are scheduled?",
-          "Find all flights departing from New York to Los Angeles.",
-          "Which airline has the highest number of flights?"
-        ]
-      }
-    };
+// Same-origin when served by FastAPI; otherwise talk to the default local server.
+const API_BASE = (location.protocol === 'file:' || (location.port !== '8000' && location.port !== ''))
+  ? 'http://127.0.0.1:8000' : '';
 
-    function showConnectionError() {
-      const banner = document.getElementById("connection-banner");
-      if (banner) banner.classList.remove("hidden");
-      const dot = document.getElementById("gpu-dot");
-      const pulse = document.getElementById("gpu-pulse");
-      if (dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
-      if (pulse) pulse.classList.add("hidden");
-      const name = document.getElementById("gpu-name");
-      if (name) name.innerText = "API Offline";
-      if (window.lucide) lucide.createIcons();
+/* ------------------------------------------------------------ helpers */
+const $ = (s, r = document) => r.querySelector(s);
+function h(tag, props, ...kids) {
+  const e = document.createElement(tag);
+  if (props) for (const [k, v] of Object.entries(props)) {
+    if (v == null || v === false) continue;
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v === true ? '' : v);
+  }
+  for (const kid of kids.flat()) if (kid != null && kid !== false) e.append(kid.nodeType ? kid : document.createTextNode(String(kid)));
+  return e;
+}
+const NS = 'http://www.w3.org/2000/svg';
+function icon(id) {
+  const s = document.createElementNS(NS, 'svg');
+  s.setAttribute('class', 'i'); s.setAttribute('aria-hidden', 'true');
+  const u = document.createElementNS(NS, 'use'); u.setAttribute('href', '#i-' + id);
+  s.append(u); return s;
+}
+const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
+const clock = d => d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+
+/* ------------------------------------------------------------ state */
+const S = { dbs: [], db: null, strategy: 'resample', attempts: 3, busy: false, view: 'empty', run: null, history: [], seq: 0, timer: null };
+const els = {
+  db: $('#db'), meta: $('#db-meta'), schema: $('#schema'), question: $('#question'), qError: $('#q-error'),
+  run: $('#run'), summary: $('#run-summary'), output: $('#output'), tape: $('#tape'), live: $('#live'),
+  history: $('#history'), historyList: $('#history-list'), attempts: $('#attempts'), form: $('#ask'),
+  offline: $('#offline'), light: $('#light'), deviceText: $('#device-text'),
+};
+
+const EXAMPLES = {
+  singer: ['How many singers are there?', 'List the name and net worth of every singer, richest first.', 'Which citizenship is the most common among singers?'],
+  concert_singer: ['How many singers are there?', 'What is the average age of all singers?', 'Which stadium has the highest capacity?', 'How many concerts were held in each year?'],
+  world_1: ['Which country has the highest life expectancy?', 'What is the population of each country?', 'How many different government forms are there?'],
+  car_1: ['How many car makers are there?', 'What is the average horsepower of all cars?'],
+  flight_2: ['How many airports are there?', 'Which airline has the most flights?'],
+  dog_kennels: ['How many dogs are there?', 'What is the average age of the dogs?', 'How many owners are there?'],
+  tvshow: ['How many TV channels are there?', 'List the title of every cartoon.'],
+};
+function examplesFor(db) {
+  if (EXAMPLES[db.db_id]) return EXAMPLES[db.db_id];
+  const t = db.tables[0];
+  return t ? [`How many rows are in ${t}?`, `Show the first 10 rows of ${t}.`] : [];
+}
+
+/* ------------------------------------------------------------ SQL: format + highlight */
+const TOKEN = /('(?:[^']|'')*'|"(?:[^"]|"")*"|`[^`]*`|\[[^\]]*\]|--[^\n]*|\/\*[\s\S]*?\*\/|\d+(?:\.\d+)?|[A-Za-z_][\w$]*|\s+|[^\sA-Za-z_\d])/g;
+const KEYWORDS = new Set(('select from where group by order having limit offset join left right inner outer cross full natural on as and or not in is null like glob between exists distinct union intersect except all case when then else end asc desc with using cast collate escape over partition').split(' '));
+const BREAK_BEFORE = new Set(['FROM', 'WHERE', 'GROUP', 'HAVING', 'ORDER', 'LIMIT', 'UNION', 'INTERSECT', 'EXCEPT']);
+const JOIN_MODS = new Set(['LEFT', 'RIGHT', 'FULL', 'INNER', 'CROSS', 'NATURAL', 'OUTER']);
+
+function formatSql(sql) {
+  const toks = (sql || '').trim().match(TOKEN) || [];
+  const parts = []; let sp = false;
+  for (const t of toks) { if (/^\s+$/.test(t)) { sp = true; continue; } parts.push({ t, sp }); sp = false; }
+  let out = '', depth = 0, prev = '', afterComment = false;
+  parts.forEach(({ t, sp }, i) => {
+    const up = t.toUpperCase();
+    const word = /^[A-Za-z_]/.test(t);
+    const nxt = parts[i + 1] ? parts[i + 1].t.toUpperCase() : '';
+    let sep = i === 0 ? '' : (sp ? ' ' : '');
+    if (i > 0 && afterComment) sep = '\n';
+    if (depth === 0 && word && i > 0) {
+      if (up === 'SELECT' || BREAK_BEFORE.has(up)) sep = '\n';
+      else if (up === 'JOIN' && !JOIN_MODS.has(prev)) sep = '\n  ';
+      else if (JOIN_MODS.has(up) && up !== 'OUTER' && !JOIN_MODS.has(prev) && (nxt === 'JOIN' || JOIN_MODS.has(nxt))) sep = '\n  ';
     }
+    out += sep + t;
+    if (t === '(') depth++; else if (t === ')') depth = Math.max(0, depth - 1);
+    prev = word ? up : t;
+    afterComment = t.startsWith('--');
+  });
+  return out;
+}
 
-    function hideConnectionError() {
-      const banner = document.getElementById("connection-banner");
-      if (banner) banner.classList.add("hidden");
-      const dot = document.getElementById("gpu-dot");
-      const pulse = document.getElementById("gpu-pulse");
-      if (dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
-      if (pulse) pulse.classList.remove("hidden");
-    }
-
-    // Initialize UI on load
-    document.addEventListener("DOMContentLoaded", async () => {
-      if (window.lucide) lucide.createIcons();
-      await fetchHealth();
-      await fetchDatabases();
-
-      // Keyboard shortcut: Ctrl + Enter / Cmd + Enter to run
-      document.getElementById("question-input").addEventListener("keydown", (e) => {
-        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
-          e.preventDefault();
-          submitQuery();
-        }
-      });
-
-      // Poll health every 30s
-      setInterval(fetchHealth, 30000);
-    });
-
-    // Strategy switch
-    function setStrategy(strat) {
-      state.strategy = strat;
-      const resampleBtn = document.getElementById("strat-resample");
-      const feedbackBtn = document.getElementById("strat-feedback");
-      const activePill = document.getElementById("active-strategy-pill");
-
-      if (strat === 'resample') {
-        resampleBtn.className = "w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-emerald-500 bg-emerald-500/10 text-emerald-300";
-        feedbackBtn.className = "w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-slate-700 bg-slate-950 text-slate-400 hover:border-slate-600";
-        if (activePill) {
-          activePill.innerText = "Resample (Active)";
-          activePill.className = "text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20";
-        }
-      } else {
-        feedbackBtn.className = "w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-emerald-500 bg-emerald-500/10 text-emerald-300";
-        resampleBtn.className = "w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-slate-700 bg-slate-950 text-slate-400 hover:border-slate-600";
-        if (activePill) {
-          activePill.innerText = "Feedback (Active)";
-          activePill.className = "text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20";
-        }
+function renderSql(pre, sql) {
+  pre.textContent = '';
+  const toks = sql.match(TOKEN) || [];
+  toks.forEach((t, i) => {
+    let cls = null;
+    if (t[0] === "'") cls = 'str';
+    else if (t.startsWith('--') || t.startsWith('/*')) cls = 'cm';
+    else if (/^\d/.test(t)) cls = 'num';
+    else if (/^[A-Za-z_]/.test(t)) {
+      if (KEYWORDS.has(t.toLowerCase())) cls = 'kw';
+      else {
+        let j = i + 1; while (j < toks.length && /^\s+$/.test(toks[j])) j++;
+        if (toks[j] === '(') cls = 'fn';
       }
     }
+    pre.append(cls ? h('span', { class: cls, text: t }) : document.createTextNode(t));
+  });
+}
 
-    // Fetch Health
-    async function fetchHealth() {
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/health`);
-        if (res.ok) {
-          const data = await res.json();
-          document.getElementById("gpu-name").innerText = data.device_name || "GPU Detected";
-          if (data.vram_used_gb && data.vram_total_gb) {
-            document.getElementById("vram-stat").innerText = `VRAM: ${data.vram_used_gb.toFixed(1)} / ${data.vram_total_gb.toFixed(1)} GB`;
-          }
-          hideConnectionError();
-        } else {
-          showConnectionError();
-        }
-      } catch (err) {
-        console.warn("Could not fetch health:", err);
-        showConnectionError();
-      }
+/* ------------------------------------------------------------ schema parsing */
+const unq = s => s.trim().replace(/^["`\[]|["`\]]$/g, '');
+function splitTop(body) {
+  const out = []; let depth = 0, quote = null, cur = '';
+  for (const c of body) {
+    if (quote) { cur += c; if (c === quote) quote = null; continue; }
+    if (c === "'" || c === '"' || c === '`') { quote = c; cur += c; continue; }
+    if (c === '(') depth++; if (c === ')') depth--;
+    if (c === ',' && depth === 0) { out.push(cur); cur = ''; } else cur += c;
+  }
+  if (cur.trim()) out.push(cur);
+  return out;
+}
+const REF = /REFERENCES\s+("[^"]+"|`[^`]+`|\[[^\]]+\]|[\w$]+)\s*(?:\(([^)]*)\))?/i;
+function parseColumns(body) {
+  const cols = [], tablePk = [], tableFk = [];
+  for (const raw of splitTop(body)) {
+    const p = raw.trim(); if (!p) continue;
+    let m;
+    if ((m = p.match(/^(?:CONSTRAINT\s+\S+\s+)?PRIMARY\s+KEY\s*\(([^)]*)\)/i))) { m[1].split(',').forEach(c => tablePk.push(unq(c))); continue; }
+    if ((m = p.match(/^(?:CONSTRAINT\s+\S+\s+)?FOREIGN\s+KEY\s*\(([^)]*)\)\s*/i))) {
+      const r = p.slice(m[0].length).match(REF);
+      if (r) tableFk.push({ cols: m[1].split(',').map(unq), table: unq(r[1]), refs: (r[2] || '').split(',').map(unq) });
+      continue;
     }
-
-    // Fetch Databases
-    async function fetchDatabases() {
-      const select = document.getElementById("db-select");
-      try {
-        const res = await fetch(`${API_BASE}/api/v1/databases`);
-        if (!res.ok) throw new Error("Failed to fetch databases: " + res.status);
-        const data = await res.json();
-        state.databases = data.databases;
-
-        select.innerHTML = "";
-
-        state.databases.forEach((db, idx) => {
-          const opt = document.createElement("option");
-          opt.value = db.db_id;
-          opt.text = `${db.db_id} (${db.tables.length} tables)`;
-          if (db.db_id === 'singer') opt.selected = true;
-          select.appendChild(opt);
-        });
-
-        document.getElementById("db-count-badge").innerText = `${state.databases.length} Available`;
-        document.getElementById("db-count-badge").className = "text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded";
-
-        select.onchange = (e) => {
-          onDatabaseChange(e.target.value);
-        };
-
-        // Set default database
-        const defaultDb = state.databases.find(d => d.db_id === 'singer') || state.databases[0];
-        if (defaultDb) onDatabaseChange(defaultDb.db_id);
-        hideConnectionError();
-
-      } catch (err) {
-        console.error("Database fetch error:", err);
-        select.innerHTML = '<option value="" disabled selected>⚠️ Failed to connect to API</option>';
-        document.getElementById("db-count-badge").innerText = "Offline";
-        document.getElementById("db-count-badge").className = "text-xs font-mono text-rose-400 bg-rose-950/60 border border-rose-800/60 px-2 py-0.5 rounded";
-        showConnectionError();
-      }
+    if (/^(?:CONSTRAINT|UNIQUE|CHECK)\b/i.test(p)) continue;
+    m = p.match(/^("[^"]+"|`[^`]+`|\[[^\]]+\]|[^\s(]+)\s*([\s\S]*)$/);
+    if (!m) continue;
+    const rest = m[2];
+    const type = (rest.match(/^([A-Za-z]+(?:\s*\(\s*[\d,\s]+\))?)/) || [, ''])[1];
+    const col = { name: unq(m[1]), type, pk: /PRIMARY\s+KEY/i.test(rest), ref: null };
+    const r = rest.match(REF);
+    if (r) col.ref = `${unq(r[1])}${r[2] ? '.' + unq(r[2].split(',')[0]) : ''}`;
+    cols.push(col);
+  }
+  for (const c of cols) if (tablePk.includes(c.name)) c.pk = true;
+  for (const fk of tableFk) fk.cols.forEach((n, i) => {
+    const c = cols.find(x => x.name === n);
+    if (c) c.ref = `${fk.table}${fk.refs[i] ? '.' + fk.refs[i] : ''}`;
+  });
+  return cols;
+}
+function parseDDL(ddl) {
+  const text = ddl || '', tables = [];
+  const re = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:"([^"]+)"|`([^`]+)`|\[([^\]]+)\]|([\w$]+))\s*\(/gi;
+  let m;
+  while ((m = re.exec(text))) {
+    const name = m[1] || m[2] || m[3] || m[4];
+    const start = re.lastIndex; let i = start, depth = 1, quote = null;
+    for (; i < text.length && depth > 0; i++) {
+      const c = text[i];
+      if (quote) { if (c === quote) quote = null; continue; }
+      if (c === "'" || c === '"' || c === '`') { quote = c; continue; }
+      if (c === '(') depth++; else if (c === ')') depth--;
     }
+    re.lastIndex = i;
+    tables.push({ name, columns: parseColumns(text.slice(start, i - 1)) });
+  }
+  return tables;
+}
 
-    // On Database Selection Change
-    function onDatabaseChange(dbId) {
-      const db = state.databases.find(d => d.db_id === dbId);
-      if (!db) return;
-      state.currentDb = db;
+/* ------------------------------------------------------------ question helpers */
+function insertIntoQuestion(text) {
+  const q = els.question, a = q.selectionStart ?? q.value.length, b = q.selectionEnd ?? a;
+  const before = q.value.slice(0, a), after = q.value.slice(b);
+  const lead = before && !/\s$/.test(before) ? ' ' : '';
+  const trail = after && !/^\s/.test(after) ? ' ' : '';
+  q.value = before + lead + text + trail + after;
+  const pos = (before + lead + text).length;
+  q.focus(); q.setSelectionRange(pos, pos);
+  hideQError();
+}
+function showQError(msg) { els.qError.textContent = msg; els.qError.hidden = false; }
+function hideQError() { els.qError.hidden = true; }
+function say(msg) { els.live.textContent = ''; setTimeout(() => { els.live.textContent = msg; }, 30); }
+function updateSummary() {
+  const s = S.strategy === 'resample' ? 'Asks again on failure' : 'Shows the model its error on failure';
+  els.summary.textContent = `${s}, up to ${plural(S.attempts, 'attempt')}`;
+}
 
-      // Update tables chips
-      const chipsContainer = document.getElementById("table-chips");
-      chipsContainer.innerHTML = "";
-      db.tables.forEach(table => {
-        const chip = document.createElement("span");
-        chip.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs border border-slate-700/60";
-        chip.innerText = table;
-        chipsContainer.appendChild(chip);
-      });
+/* ------------------------------------------------------------ API: health + databases */
+async function fetchHealth() {
+  try {
+    const r = await fetch(`${API_BASE}/api/v1/health`);
+    if (!r.ok) throw new Error(String(r.status));
+    const d = await r.json();
+    hideOffline();
+    let text;
+    if (d.cuda_available && d.device_name) {
+      text = d.device_name;
+      if (d.vram_used_gb != null && d.vram_total_gb != null) text += `, ${d.vram_used_gb.toFixed(1)} of ${d.vram_total_gb.toFixed(1)} GB in use`;
+      els.light.className = 'light up';
+    } else { text = 'No GPU found, running on CPU'; els.light.className = 'light cpu'; }
+    text += d.model_loaded ? '. Model ready.' : '. Model loads on the first query.';
+    els.deviceText.textContent = text;
+    return true;
+  } catch { showOffline(); return false; }
+}
+function showOffline() {
+  $('#offline-url').textContent = API_BASE || location.origin;
+  els.offline.hidden = false; els.light.className = 'light off'; els.deviceText.textContent = 'API offline';
+}
+function hideOffline() { els.offline.hidden = true; }
 
-      document.getElementById("db-size-stat").innerText = `${db.size_mb} MB`;
+async function fetchDatabases() {
+  try {
+    const r = await fetch(`${API_BASE}/api/v1/databases`);
+    if (!r.ok) throw new Error(`The server returned ${r.status}.`);
+    const d = await r.json();
+    S.dbs = d.databases || [];
+    if (!S.dbs.length) { els.db.replaceChildren(h('option', { text: 'No databases found' })); els.meta.textContent = 'Run python src/setup_eval_data.py to download the sample databases.'; return; }
+    els.db.replaceChildren(...S.dbs.map(db => h('option', { value: db.db_id, text: `${db.db_id} (${plural(db.tables.length, 'table')})` })));
+    const first = S.dbs.find(x => x.db_id === 'singer') || S.dbs[0];
+    els.db.value = first.db_id;
+    selectDb(first.db_id);
+    hideOffline();
+  } catch (e) {
+    els.db.replaceChildren(h('option', { text: 'Unavailable' }));
+    els.meta.textContent = 'Databases could not be loaded.';
+    showOffline();
+  }
+}
 
-      // Update DDL
-      const schemaCode = document.getElementById("schema-code");
-      schemaCode.textContent = db.schema_ddl;
-      if (window.Prism) {
-        try { Prism.highlightElement(schemaCode); } catch (e) {}
-      }
+function selectDb(id) {
+  S.db = S.dbs.find(d => d.db_id === id) || null;
+  if (!S.db) return;
+  els.meta.textContent = `${plural(S.db.tables.length, 'table')}, ${S.db.size_mb} MB`;
+  els.question.placeholder = (examplesFor(S.db)[0] || 'Ask a question about this database');
+  renderSchema();
+  if (S.view === 'empty') renderOutput();
+}
 
-      // Populate Sample Questions
-      const samplesContainer = document.getElementById("sample-questions");
-      samplesContainer.innerHTML = "";
-      const samples = state.sampleQuestionsMap[dbId] || [
-        `How many records exist in ${db.tables[0]}?`,
-        `List all columns from ${db.tables[0]} limit 10.`
-      ];
+function renderSchema() {
+  const parsed = parseDDL(S.db.schema_ddl);
+  const byName = new Map(parsed.map(t => [t.name, t]));
+  const items = S.db.tables.map(name => {
+    const t = byName.get(name) || { name, columns: [] };
+    const colList = h('ul', { class: 'cols', id: `cols-${name}`, hidden: true },
+      t.columns.map(c => h('li', null,
+        h('button', { class: 'col', type: 'button', onclick: () => insertIntoQuestion(c.name), 'aria-label': `Add column ${c.name} to the question` },
+          h('span', { class: 'col-name', text: c.name }),
+          c.type ? h('span', { class: 'col-type', text: c.type.toLowerCase() }) : null,
+          c.pk ? h('span', { class: 'col-key' }, icon('key'), 'key') : null,
+          c.ref ? h('span', { class: 'col-ref', text: `references ${c.ref}` }) : null))));
+    const toggle = h('button', { class: 'tbl-toggle', type: 'button', 'aria-expanded': 'false', 'aria-controls': `cols-${name}`,
+      onclick: ev => { const b = ev.currentTarget, open = b.getAttribute('aria-expanded') === 'true'; b.setAttribute('aria-expanded', String(!open)); colList.hidden = open; } },
+      icon('chev'), h('span', { class: 'tbl-name', text: name }), h('span', { class: 'tbl-count', text: plural(t.columns.length, 'column') }));
+    const add = h('button', { class: 'tbl-add', type: 'button', 'aria-label': `Add table ${name} to the question`, title: 'Add to question', onclick: () => insertIntoQuestion(name) }, icon('plus'));
+    return h('li', { class: 'tbl' }, h('div', { class: 'tbl-row' }, toggle, add), colList);
+  });
+  els.schema.replaceChildren(...items);
+  // open the first table so the browser doesn't look empty
+  const first = els.schema.querySelector('.tbl-toggle'); if (first) first.click();
+}
 
-      samples.forEach(q => {
-        const btn = document.createElement("button");
-        btn.type = "button";
-        btn.className = "w-full text-left text-xs bg-slate-950 hover:bg-slate-800/80 p-2 rounded-lg border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer flex items-center justify-between group";
-        btn.innerHTML = `
-          <span class="truncate pr-2">${q}</span>
-          <i data-lucide="corner-down-left" class="w-3 h-3 text-slate-500 group-hover:text-emerald-400 transition flex-shrink-0"></i>
-        `;
-        btn.onclick = () => {
-          document.getElementById("question-input").value = q;
-        };
-        samplesContainer.appendChild(btn);
-      });
+/* ------------------------------------------------------------ query */
+async function submit() {
+  if (S.busy) return;
+  const q = els.question.value.trim();
+  if (!q) { showQError('Type a question to run.'); els.question.focus(); return; }
+  if (!S.db) { showQError('Choose a database first.'); return; }
+  hideQError();
 
-      lucide.createIcons();
+  const run = { id: ++S.seq, question: q, dbId: S.db.db_id, strategy: S.strategy, maxRetries: S.attempts, startedAt: new Date(), t0: performance.now(), res: null, error: null };
+  S.busy = true; S.run = run; S.view = 'busy';
+  els.run.disabled = true; els.run.textContent = 'Running…';
+  renderOutput(); renderTape(); say('Running the query.');
+  clearInterval(S.timer);
+  S.timer = setInterval(() => { const t = $('#elapsed'); if (t) t.textContent = ((performance.now() - run.t0) / 1000).toFixed(1) + ' s'; }, 100);
+
+  try {
+    const r = await fetch(`${API_BASE}/api/v1/query`, { method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ question: q, db_id: run.dbId, strategy: run.strategy, max_retries: run.maxRetries }) });
+    if (!r.ok) {
+      let detail = '';
+      try { const j = await r.json(); detail = Array.isArray(j.detail) ? j.detail.map(x => x.msg).join('; ') : (j.detail || ''); } catch {}
+      throw new Error(detail || `The server returned ${r.status}.`);
     }
+    run.res = await r.json();
+  } catch (err) {
+    run.error = err instanceof TypeError ? 'unreachable' : err.message;
+    if (err instanceof TypeError) showOffline();
+  } finally {
+    clearInterval(S.timer);
+    run.elapsed = (performance.now() - run.t0) / 1000;
+    S.busy = false; S.view = 'run';
+    els.run.disabled = false; els.run.textContent = 'Run query';
+    S.history.unshift(run); S.history = S.history.slice(0, 10);
+  }
+  renderOutput(); renderTape(true); renderHistory();
+  say(run.error ? 'The run could not complete.' : (run.res.status === 'ok' ? `Done. ${plural((run.res.rows || []).length, 'row')}.` : 'No working query was found.'));
+}
 
-    // Submit Query to Agent
-    async function submitQuery() {
-      const question = document.getElementById("question-input").value.trim();
-      if (!question) {
-        alert("Please enter a question.");
-        return;
-      }
-      if (!state.currentDb) {
-        alert("Please select a target database.");
-        return;
-      }
+/* ------------------------------------------------------------ output */
+function renderOutput() {
+  const o = els.output; o.replaceChildren();
+  if (S.view === 'empty' || !S.run) {
+    const ex = S.db ? examplesFor(S.db) : [];
+    o.append(h('div', { class: 'empty' },
+      h('p', { class: 'lead', text: S.db ? `Ask a question about ${S.db.db_id}.` : 'Choose a database to begin.' }),
+      ex.length ? h('ul', { class: 'examples' }, ex.map(q => h('li', null, h('button', { class: 'linkish', type: 'button', text: q, onclick: () => { els.question.value = q; hideQError(); els.question.focus(); } })))) : null,
+      h('p', { class: 'tip', text: 'Full sentences work better than fragments. "What is the population of each country?" is clearer to the model than "population of each country".' })));
+    return;
+  }
+  if (S.view === 'busy') {
+    o.append(h('div', { class: 'working' }, h('span', { class: 't', id: 'elapsed', text: '0.0 s' }),
+      h('p', { text: 'Writing the SQL, checking it, and running it. Failed attempts retry automatically.' })));
+    return;
+  }
+  const run = S.run;
+  if (run.error) { o.append(failBox(run.error === 'unreachable' ? "The API didn't respond." : 'The server rejected this request.', run.error === 'unreachable' ? 'Check that it is still running, then try again.' : run.error, [])); return; }
+  const res = run.res, ok = res.status === 'ok', attempts = res.attempts || [];
 
-      const runBtn = document.getElementById("run-btn");
-      const btnText = document.getElementById("btn-text");
-      const maxRetries = parseInt(document.getElementById("max-retries-slider").value, 10);
+  // SQL
+  const pre = h('pre', { class: 'sql', tabindex: '0', 'aria-label': 'Generated SQL' });
+  const sql = formatSql(res.sql || '');
+  if (sql) renderSql(pre, sql); else pre.textContent = '-- The model did not return a query';
+  const copyBtn = h('button', { class: 'btn-quiet', type: 'button', onclick: async () => {
+    try { await navigator.clipboard.writeText(sql); } catch { const ta = h('textarea', { 'aria-hidden': 'true' }); ta.value = sql; document.body.append(ta); ta.select(); try { document.execCommand('copy'); } catch {} ta.remove(); }
+    copyBtn.lastChild.textContent = 'Copied'; setTimeout(() => { copyBtn.lastChild.textContent = 'Copy SQL'; }, 1600);
+  } }, icon('copy'), h('span', { text: 'Copy SQL' }));
+  const label = ok ? (attempts.length > 1 ? `Generated SQL, attempt ${attempts.length}` : 'Generated SQL') : 'Last attempt';
+  o.append(h('section', { class: 'block' },
+    h('div', { class: 'block-head' }, h('h2', { text: label }), copyBtn),
+    pre,
+    h('p', { class: 'verify', text: `Read the query before you trust the numbers. On the Spider benchmark this setup matched the reference answer ${run.strategy === 'resample' ? 58 : 57} times in 100.` })));
 
-      // Loading state
-      runBtn.disabled = true;
-      btnText.innerText = "Analyzing...";
-      document.getElementById("btn-icon").setAttribute("data-lucide", "loader-2");
-      document.getElementById("btn-icon").classList.add("animate-spin");
-      lucide.createIcons();
+  // result or failure
+  if (!ok) {
+    o.append(h('section', { class: 'block' }, failBox(`No working query after ${plural(attempts.length || run.maxRetries, 'attempt')}.`, res.error_message || (attempts.length && attempts[attempts.length - 1].error) || 'The query did not run.', [
+      'Rephrase as a full sentence.', 'Name the table or column you mean, using the schema on the left.', 'Raise the maximum attempts in Run options.'])));
+    return;
+  }
+  const rows = res.rows || [], cols = res.columns || [];
+  const exportBtn = h('button', { class: 'btn-quiet', type: 'button', onclick: () => exportCsv(run) }, icon('down'), h('span', { text: 'Export CSV' }));
+  let body;
+  if (!rows.length) body = h('p', { class: 'grid-empty', text: 'The query ran but returned no rows. Check the conditions in the SQL above.' });
+  else {
+    const numeric = cols.map((_, i) => rows.every(r => r[i] == null || typeof r[i] === 'number'));
+    body = h('div', { class: 'gridwrap', tabindex: '0', role: 'region', 'aria-label': 'Query result' },
+      h('table', { class: 'grid' },
+        h('thead', null, h('tr', null, h('th', { class: 'idx', scope: 'col' }, h('span', { class: 'sr-only', text: 'Row' })), cols.map((c, i) => h('th', { scope: 'col', class: numeric[i] ? 'r' : null, text: c })))),
+        h('tbody', null, rows.map((r, n) => h('tr', null, h('td', { class: 'idx', text: n + 1 }),
+          r.map((v, i) => v === null ? h('td', { class: numeric[i] ? 'r' : null }, h('span', { class: 'null', text: 'null' }))
+            : h('td', { class: numeric[i] ? 'r' : null, title: String(v), text: String(v) })))))));
+  }
+  const count = `${plural(rows.length, 'row')}, ${plural(cols.length, 'column')}${res.is_truncated ? ', capped at 200' : ''}`;
+  o.append(h('section', { class: 'block' }, h('div', { class: 'block-head' }, h('h2', null, 'Result ', h('span', { class: 'sub', text: count })), rows.length ? exportBtn : null), body));
+}
+function failBox(title, message, tips) {
+  return h('div', { class: 'fail-box', role: 'alert' }, h('h2', { text: title }), h('p', { class: 'err', text: message }),
+    tips.length ? h('p', { text: 'Things to try:' }) : null, tips.length ? h('ul', null, tips.map(t => h('li', { text: t }))) : null);
+}
+function exportCsv(run) {
+  const { columns = [], rows = [] } = run.res; const q = v => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = '﻿' + [columns.map(q).join(','), ...rows.map(r => r.map(v => v === null ? '' : q(v)).join(','))].join('\r\n');
+  const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  const a = h('a', { href: url, download: `${run.dbId}-result.csv` }); document.body.append(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
 
-      try {
-        const payload = {
-          question: question,
-          db_id: state.currentDb.db_id,
-          strategy: state.strategy,
-          max_retries: maxRetries,
-        };
+/* ------------------------------------------------------------ run record */
+function failedStage(err) { return /^SQLite Error/i.test(err || '') ? 'ran' : 'checked'; }
+function check(label, state) {
+  const g = state === 'pass' ? 'check' : state === 'fail' ? 'x' : 'dash';
+  return h('li', { class: state === 'skip' ? 'skip-c' : state }, icon(g), h('span', { text: label }), state === 'skip' ? h('span', { class: 'sr-only', text: ' (not reached)' }) : null);
+}
+function renderTape(animate) {
+  const t = els.tape; t.replaceChildren();
+  const run = S.run;
+  if (!run) { t.append(h('h2', { text: 'Run record' }), h('p', { class: 'tape-empty', text: 'Every attempt the agent makes is listed here with what it checked, so you can see how it got to the answer.' })); return; }
+  t.append(h('h2', { text: 'Run record' }), h('p', { class: 'when', text: `${clock(run.startedAt)} on ${run.dbId}, ${run.strategy === 'resample' ? 'ask again' : 'show error'}, up to ${run.maxRetries}` }));
+  if (S.view === 'busy') { t.append(h('p', { class: 'tape-empty', text: 'Working…' })); return; }
+  if (run.error) { t.append(h('p', { class: 'tape-empty', text: 'The request did not complete, so there is nothing to record.' })); return; }
+  const res = run.res, attempts = res.attempts || [], ok = res.status === 'ok';
+  const list = h('ol', { class: 'entries' });
+  attempts.forEach((a, i) => {
+    const failed = Boolean(a.error), stage = failed ? failedStage(a.error) : null;
+    const entry = h('li', { class: 'entry' + (animate ? ' print' : ''), style: animate ? `animation-delay:${i * 180}ms` : null },
+      h('div', { class: 'entry-head' }, h('b', { text: `Attempt ${a.attempt}` }), h('span', { class: 'badge ' + (failed ? 'bad' : 'ok'), text: failed ? 'Failed' : 'Worked' })),
+      h('ul', { class: 'checks' }, check('Written', 'pass'), check('Checked', failed && stage === 'checked' ? 'fail' : 'pass'), check('Ran', !failed ? 'pass' : stage === 'ran' ? 'fail' : 'skip')),
+      h('details', null, h('summary', { text: 'SQL' }), h('pre', { text: formatSql(a.sql || '') })),
+      failed ? h('p', { class: 'err', text: a.error }) : null);
+    list.append(entry);
+  });
+  if (!attempts.length) list.append(h('li', { class: 'entry' }, h('p', { class: 'tape-empty', text: 'The agent recorded no attempts.' })));
+  t.append(list);
+  const verdict = ok ? (attempts.length > 1 ? 'Recovered' : 'Succeeded') : 'Failed';
+  t.append(h('p', { class: 'total' + (animate ? ' print' : ''), style: animate ? `animation-delay:${attempts.length * 180}ms` : null },
+    h('span', { text: verdict }), h('span', { text: `${plural(attempts.length, 'attempt')}, ${res.latency_seconds != null ? res.latency_seconds.toFixed(1) : run.elapsed.toFixed(1)} s` })));
+}
+function renderHistory() {
+  els.history.hidden = S.history.length < 2;
+  els.historyList.replaceChildren(...S.history.map(run => {
+    const ok = run.res && run.res.status === 'ok';
+    const b = h('button', { class: 'hist-btn', type: 'button', 'aria-current': String(S.run === run), onclick: () => {
+      S.run = run; S.view = 'run'; els.question.value = run.question; renderOutput(); renderTape(false); renderHistory(); },
+      title: run.question }, h('span', { class: 'hq', text: run.question }), h('span', { class: 'hs ' + (ok ? 'ok' : 'bad'), text: ok ? 'Worked' : 'Failed' }));
+    return h('li', null, b);
+  }));
+}
 
-        const res = await fetch(`${API_BASE}/api/v1/query`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
+/* ------------------------------------------------------------ wiring */
+els.db.addEventListener('change', e => selectDb(e.target.value));
+els.form.addEventListener('submit', e => { e.preventDefault(); submit(); });
+els.question.addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); submit(); } });
+els.question.addEventListener('input', hideQError);
+document.querySelectorAll('input[name="strategy"]').forEach(r => r.addEventListener('change', () => { S.strategy = r.value; updateSummary(); }));
+els.attempts.addEventListener('input', () => { const n = Math.min(5, Math.max(1, parseInt(els.attempts.value, 10) || 3)); S.attempts = n; updateSummary(); });
+els.attempts.addEventListener('blur', () => { els.attempts.value = S.attempts; });
+$('#retry-conn').addEventListener('click', async () => { if (await fetchHealth()) fetchDatabases(); });
 
-        if (!res.ok) {
-          const errData = await res.json();
-          throw new Error(errData.detail || "Server error");
-        }
-
-        const data = await res.json();
-        state.queryResult = data;
-        renderResults(data);
-
-      } catch (err) {
-        alert("Execution Error: " + err.message);
-      } finally {
-        runBtn.disabled = false;
-        btnText.innerText = "Run Query";
-        document.getElementById("btn-icon").setAttribute("data-lucide", "play");
-        document.getElementById("btn-icon").classList.remove("animate-spin");
-        lucide.createIcons();
-      }
-    }
-
-    // Render Query Results
-    function renderResults(res) {
-      document.getElementById("empty-state").classList.add("hidden");
-      document.getElementById("metrics-banner").classList.remove("hidden");
-      document.getElementById("sql-card").classList.remove("hidden");
-      document.getElementById("trace-card").classList.remove("hidden");
-      document.getElementById("table-card").classList.remove("hidden");
-
-      // 1. Metrics Banner
-      const isOk = res.status === 'ok';
-      const statusBadge = document.getElementById("status-badge");
-      if (isOk) {
-        statusBadge.className = "px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1";
-        statusBadge.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i><span>SUCCESS</span>`;
-      } else {
-        statusBadge.className = "px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1";
-        statusBadge.innerHTML = `<i data-lucide="x-circle" class="w-3.5 h-3.5"></i><span>FAILED</span>`;
-      }
-
-      const healBadge = document.getElementById("heal-badge");
-      if (res.healed) {
-        healBadge.classList.remove("hidden");
-      } else {
-        healBadge.classList.add("hidden");
-      }
-
-      document.getElementById("stat-latency").innerText = `${res.latency_seconds.toFixed(2)}s`;
-      document.getElementById("stat-attempts").innerText = res.attempts_count;
-      document.getElementById("stat-rows").innerText = res.rows ? res.rows.length : 0;
-
-      // 2. SQL Output
-      const sqlElem = document.getElementById("output-sql");
-      sqlElem.textContent = res.sql || "-- No SQL statement generated";
-      if (window.Prism) {
-        try { Prism.highlightElement(sqlElem); } catch (e) {}
-      }
-
-      // 3. Execution Trace Steps
-      const traceContainer = document.getElementById("trace-steps");
-      traceContainer.innerHTML = "";
-
-      res.attempts.forEach((att, idx) => {
-        const stepDiv = document.createElement("div");
-        const hasError = Boolean(att.error);
-
-        stepDiv.className = `p-3 rounded-lg border text-xs font-mono ${
-          hasError 
-            ? "border-rose-900/60 bg-rose-950/20 text-rose-200" 
-            : "border-emerald-900/60 bg-emerald-950/20 text-emerald-200"
-        }`;
-
-        stepDiv.innerHTML = `
-          <div class="flex items-center justify-between font-semibold pb-1.5 border-b ${hasError ? 'border-rose-900/40 text-rose-400' : 'border-emerald-900/40 text-emerald-400'}">
-            <span class="flex items-center gap-1.5">
-              <i data-lucide="${hasError ? 'alert-triangle' : 'check'}" class="w-3.5 h-3.5"></i>
-              Attempt ${att.attempt}
-            </span>
-            <span class="uppercase text-[10px] tracking-wider">${hasError ? 'Failed & Reflected' : 'Executed Cleanly'}</span>
-          </div>
-          <div class="mt-2 text-slate-300">
-            <span class="text-slate-500">SQL:</span> <code class="text-slate-200">${escapeHtml(att.sql)}</code>
-          </div>
-          ${hasError ? `<div class="mt-1.5 text-rose-300 text-[11px]"><span class="text-rose-400 font-semibold">Error:</span> ${escapeHtml(att.error)}</div>` : ''}
-        `;
-        traceContainer.appendChild(stepDiv);
-      });
-
-      // 4. Data Table
-      const thead = document.getElementById("table-head-row");
-      const tbody = document.getElementById("table-body");
-      thead.innerHTML = "";
-      tbody.innerHTML = "";
-
-      if (res.columns && res.columns.length > 0) {
-        res.columns.forEach(col => {
-          const th = document.createElement("th");
-          th.className = "px-4 py-2 font-mono text-slate-300 font-semibold";
-          th.innerText = col;
-          thead.appendChild(th);
-        });
-      }
-
-      if (res.rows && res.rows.length > 0) {
-        res.rows.forEach(row => {
-          const tr = document.createElement("tr");
-          tr.className = "hover:bg-slate-850/50 transition";
-          row.forEach(val => {
-            const td = document.createElement("td");
-            td.className = "px-4 py-2 text-slate-200";
-            td.innerText = (val === null) ? "NULL" : val;
-            tr.appendChild(td);
-          });
-          tbody.appendChild(tr);
-        });
-      } else {
-        const tr = document.createElement("tr");
-        tr.innerHTML = `<td colspan="${(res.columns && res.columns.length) || 1}" class="px-4 py-6 text-center text-slate-500 italic">Query executed successfully, but returned 0 rows.</td>`;
-        tbody.appendChild(tr);
-      }
-
-      document.getElementById("row-count-badge").innerText = `${res.rows ? res.rows.length : 0} rows${res.is_truncated ? ' (capped at 200)' : ''}`;
-
-      lucide.createIcons();
-    }
-
-    // Helper: Copy SQL
-    function copySql() {
-      if (!state.queryResult || !state.queryResult.sql) return;
-      navigator.clipboard.writeText(state.queryResult.sql);
-      const btnText = document.getElementById("copy-btn-text");
-      btnText.innerText = "Copied!";
-      setTimeout(() => { btnText.innerText = "Copy SQL"; }, 2000);
-    }
-
-    // Helper: Export CSV
-    function exportCsv() {
-      if (!state.queryResult || !state.queryResult.rows || !state.queryResult.columns) return;
-      const headers = state.queryResult.columns.join(",");
-      const rows = state.queryResult.rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
-      const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(headers + "\n" + rows);
-      const link = document.createElement("a");
-      link.setAttribute("href", csvContent);
-      link.setAttribute("download", `query_result_${state.currentDb.db_id}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-
-    function escapeHtml(text) {
-      if (!text) return "";
-      return text
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#039;");
-    }
-  </script>
+if (matchMedia('(max-width: 820px)').matches) $('#tables').open = false;
+updateSummary(); renderOutput(); renderTape();
+(async () => { if (await fetchHealth()) await fetchDatabases(); else await fetchDatabases(); setInterval(fetchHealth, 30000); })();
+})();
+</script>
 </body>
 </html>
