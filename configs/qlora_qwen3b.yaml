@@ -1,0 +1,55 @@
+# QLoRA Training Configuration for RTX 3060 12GB
+# Strictly follows Text-to-SQL Analyst Agent — Master Plan
+
+model:
+  base_model_name: "Qwen/Qwen2.5-Coder-3B-Instruct"
+  torch_dtype: "bfloat16"
+  use_4bit: true
+  bnb_4bit_quant_type: "nf4"
+  bnb_4bit_use_double_quant: true
+
+lora:
+  r: 16
+  lora_alpha: 32
+  lora_dropout: 0.05
+  target_modules:
+    - "q_proj"
+    - "k_proj"
+    - "v_proj"
+    - "o_proj"
+    - "gate_proj"
+    - "up_proj"
+    - "down_proj"
+  bias: "none"
+  task_type: "CAUSAL_LM"
+
+training:
+  output_dir: "output/checkpoints"
+  final_adapter_dir: "output/final_adapter"
+  max_seq_length: 1024
+  num_train_epochs: 1 # 1 epoch for first run, 2 for final
+  per_device_train_batch_size: 2
+  gradient_accumulation_steps: 8 # Effective batch size = 16
+  learning_rate: 0.0002
+  lr_scheduler_type: "cosine"
+  warmup_ratio: 0.03
+  weight_decay: 0.01
+  logging_steps: 10
+  save_strategy: "steps"
+  save_steps: 200
+  save_total_limit: 2
+  seed: 42
+  bf16: true
+  fp16: false
+  gradient_checkpointing: true
+  optim: "paged_adamw_8bit"
+  dataloader_num_workers: 0 # Avoid Windows multithreading data loader hangs
+
+data:
+  train_file: "data/processed/train.jsonl"
+  dataset_text_field: "text"
+
+eval:
+  eval_file: "data/processed/eval_questions.json"
+  results_dir: "results"
+
