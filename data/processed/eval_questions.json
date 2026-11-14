@@ -1,0 +1,902 @@
+[
+  {
+    "eval_id": 1,
+    "spider_dev_idx": 301,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "What is the document name and template id for document with description with the letter 'w' in it?",
+    "sql": "SELECT document_name ,  template_id FROM Documents WHERE Document_Description LIKE \"%w%\"",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 2,
+    "spider_dev_idx": 756,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "Which language is the most popular on the Asian continent?",
+    "sql": "SELECT T2.Language FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T1.Continent  =  \"Asia\" GROUP BY T2.Language ORDER BY COUNT (*) DESC LIMIT 1",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 3,
+    "spider_dev_idx": 919,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "Find the states where both owners and professionals live.",
+    "sql": "SELECT state FROM Owners INTERSECT SELECT state FROM Professionals",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 4,
+    "spider_dev_idx": 192,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "Return the number of flights.",
+    "sql": "SELECT count(*) FROM FLIGHTS",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 5,
+    "spider_dev_idx": 814,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "Which language is spoken by the largest number of countries?",
+    "sql": "SELECT LANGUAGE FROM countrylanguage GROUP BY LANGUAGE ORDER BY count(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 6,
+    "spider_dev_idx": 1007,
+    "db_id": "singer",
+    "db_path": "E:/Projects/SQL/data/spider_db/singer/singer.sqlite",
+    "question": "What are the names of the singers who are not French citizens?",
+    "sql": "SELECT Name FROM singer WHERE Citizenship != \"France\"",
+    "schema": "CREATE TABLE \"singer\" (\n\"Singer_ID\" int,\n\"Name\" text,\n\"Birth_Year\" real,\n\"Net_Worth_Millions\" real,\n\"Citizenship\" text,\nPRIMARY KEY (\"Singer_ID\")\n);\n\nCREATE TABLE \"song\" (\n\"Song_ID\" int,\n\"Title\" text,\n\"Singer_ID\" int,\n\"Sales\" real,\n\"Highest_Position\" real,\nPRIMARY KEY (\"Song_ID\"),\nFOREIGN KEY (\"Singer_ID\") REFERENCES `singer`(\"Singer_ID\")\n);"
+  },
+  {
+    "eval_id": 7,
+    "spider_dev_idx": 231,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "Find the abbreviation and country of the airline that has fewest number of flights?",
+    "sql": "SELECT T1.Abbreviation ,  T1.Country FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) LIMIT 1",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 8,
+    "spider_dev_idx": 615,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "List top 3 highest Rating  TV series. List the TV series's Episode and Rating.",
+    "sql": "SELECT Episode ,  Rating FROM TV_series ORDER BY Rating DESC LIMIT 3;",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 9,
+    "spider_dev_idx": 113,
+    "db_id": "car_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/car_1/car_1.sqlite",
+    "question": "How many car makers are there in france?",
+    "sql": "SELECT count(*) FROM CAR_MAKERS AS T1 JOIN COUNTRIES AS T2 ON T1.Country  =  T2.CountryId WHERE T2.CountryName  =  'france';",
+    "schema": "CREATE TABLE \"car_makers\" ( \n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"Maker\" TEXT, \n\t\"FullName\" TEXT, \n\t\"Country\" TEXT,\n\tFOREIGN KEY (Country) REFERENCES countries(CountryId)\n);\n\nCREATE TABLE \"car_names\" ( \n\t\"MakeId\" INTEGER PRIMARY KEY, \n\t\"Model\" TEXT, \n\t\"Make\" TEXT,\n\tFOREIGN KEY (Model) REFERENCES model_list (Model)\n);\n\nCREATE TABLE \"cars_data\" (\n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"MPG\" TEXT, \n\t\"Cylinders\" INTEGER, \n\t\"Edispl\" REAL, \n\t\"Horsepower\" TEXT, \n\t\"Weight\" INTEGER, \n\t\"Accelerate\" REAL, \n\t\"Year\" INTEGER,\n\tFOREIGN KEY (Id) REFERENCES car_names (MakeId)\n);\n\nCREATE TABLE \"continents\" ( \n\t\"ContId\" INTEGER PRIMARY KEY, \n\t\"Continent\" TEXT \n);\n\nCREATE TABLE \"countries\" (\n\t\"CountryId\" INTEGER PRIMARY KEY, \n\t\"CountryName\" TEXT, \n\t\"Continent\" INTEGER,\n\tFOREIGN KEY (Continent) REFERENCES continents(ContId)\n);\n\nCREATE TABLE \"model_list\" ( \n\t\"ModelId\" INTEGER PRIMARY KEY, \n\t\"Maker\" INTEGER, \n\t\"Model\" TEXT UNIQUE,\n\tFOREIGN KEY (Maker) REFERENCES car_makers (Id)\n\n);"
+  },
+  {
+    "eval_id": 10,
+    "spider_dev_idx": 184,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "What are the airline names and abbreviations for airlines in the USA?",
+    "sql": "SELECT Airline ,  Abbreviation FROM AIRLINES WHERE Country  =  \"USA\"",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 11,
+    "spider_dev_idx": 311,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "What is the id and type code for the template used by the most documents?",
+    "sql": "SELECT T1.template_id ,  T2.Template_Type_Code FROM Documents AS T1 JOIN Templates AS T2 ON T1.template_id  =  T2.template_id GROUP BY T1.template_id ORDER BY count(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 12,
+    "spider_dev_idx": 327,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "What is the version number and template type code for the template with version number later than 5?",
+    "sql": "SELECT version_number ,  template_type_code FROM Templates WHERE version_number  >  5",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 13,
+    "spider_dev_idx": 293,
+    "db_id": "employee_hire_evaluation",
+    "db_path": "E:/Projects/SQL/data/spider_db/employee_hire_evaluation/employee_hire_evaluation.sqlite",
+    "question": "Which district has both stores with less than 3000 products and stores with more than 10000 products?",
+    "sql": "SELECT district FROM shop WHERE Number_products  <  3000 INTERSECT SELECT district FROM shop WHERE Number_products  >  10000",
+    "schema": "CREATE TABLE \"employee\" (\n\"Employee_ID\" int,\n\"Name\" text,\n\"Age\" int,\n\"City\" text,\nPRIMARY KEY (\"Employee_ID\")\n);\n\nCREATE TABLE \"evaluation\" (\n\"Employee_ID\" text,\n\"Year_awarded\" text,\n\"Bonus\" real,\nPRIMARY KEY (\"Employee_ID\",\"Year_awarded\"),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"hiring\" (\n\"Shop_ID\" int,\n\"Employee_ID\" int,\n\"Start_from\" text,\n\"Is_full_time\" bool,\nPRIMARY KEY (\"Employee_ID\"),\nFOREIGN KEY (`Shop_ID`) REFERENCES `shop`(`Shop_ID`),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"shop\" (\n\"Shop_ID\" int,\n\"Name\" text,\n\"Location\" text,\n\"District\" text,\n\"Number_products\" int,\n\"Manager_name\" text,\nPRIMARY KEY (\"Shop_ID\")\n);"
+  },
+  {
+    "eval_id": 14,
+    "spider_dev_idx": 693,
+    "db_id": "voter_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/voter_1/voter_1.sqlite",
+    "question": "What are the distinct states and create time of all votes?",
+    "sql": "SELECT DISTINCT state ,  created FROM votes",
+    "schema": "CREATE TABLE `AREA_CODE_STATE` (\n  `area_code` integer NOT NULL\n,  `state` varchar(2) NOT NULL\n,  PRIMARY KEY (`area_code`)\n);\n\nCREATE TABLE `CONTESTANTS` (\n  `contestant_number` integer\n,  `contestant_name` varchar(50) NOT NULL\n,  PRIMARY KEY (`contestant_number`)\n);\n\nCREATE TABLE `VOTES` (\n  `vote_id` integer NOT NULL PRIMARY KEY\n,  `phone_number` integer NOT NULL\n,  `state` varchar(2) NOT NULL\n,  `contestant_number` integer NOT NULL\n,  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP\n, \tFOREIGN KEY (`state`) REFERENCES `AREA_CODE_STATE`(`state`)\n, \tFOREIGN KEY (`contestant_number`) REFERENCES `CONTESTANTS`(`contestant_number`)\n);"
+  },
+  {
+    "eval_id": 15,
+    "spider_dev_idx": 198,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "Give the city and country for the Alton airport.",
+    "sql": "SELECT City ,  Country FROM AIRPORTS WHERE AirportName  =  \"Alton\"",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 16,
+    "spider_dev_idx": 922,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "Which professionals live in the state of Indiana or have done treatment on more than 2 treatments? List his or her id, last name and cell phone.",
+    "sql": "SELECT professional_id ,  last_name ,  cell_number FROM Professionals WHERE state  =  'Indiana' UNION SELECT T1.professional_id ,  T1.last_name ,  T1.cell_number FROM Professionals AS T1 JOIN Treatments AS T2 ON T1.professional_id  =  T2.professional_id GROUP BY T1.professional_id HAVING count(*)  >  2",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 17,
+    "spider_dev_idx": 177,
+    "db_id": "car_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/car_1/car_1.sqlite",
+    "question": "What are the id and names of the countries which have more than 3 car makers or produce the 'fiat' model?",
+    "sql": "SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country GROUP BY T1.countryId HAVING count(*)  >  3 UNION SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country JOIN MODEL_LIST AS T3 ON T2.Id  =  T3.Maker WHERE T3.Model  =  'fiat';",
+    "schema": "CREATE TABLE \"car_makers\" ( \n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"Maker\" TEXT, \n\t\"FullName\" TEXT, \n\t\"Country\" TEXT,\n\tFOREIGN KEY (Country) REFERENCES countries(CountryId)\n);\n\nCREATE TABLE \"car_names\" ( \n\t\"MakeId\" INTEGER PRIMARY KEY, \n\t\"Model\" TEXT, \n\t\"Make\" TEXT,\n\tFOREIGN KEY (Model) REFERENCES model_list (Model)\n);\n\nCREATE TABLE \"cars_data\" (\n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"MPG\" TEXT, \n\t\"Cylinders\" INTEGER, \n\t\"Edispl\" REAL, \n\t\"Horsepower\" TEXT, \n\t\"Weight\" INTEGER, \n\t\"Accelerate\" REAL, \n\t\"Year\" INTEGER,\n\tFOREIGN KEY (Id) REFERENCES car_names (MakeId)\n);\n\nCREATE TABLE \"continents\" ( \n\t\"ContId\" INTEGER PRIMARY KEY, \n\t\"Continent\" TEXT \n);\n\nCREATE TABLE \"countries\" (\n\t\"CountryId\" INTEGER PRIMARY KEY, \n\t\"CountryName\" TEXT, \n\t\"Continent\" INTEGER,\n\tFOREIGN KEY (Continent) REFERENCES continents(ContId)\n);\n\nCREATE TABLE \"model_list\" ( \n\t\"ModelId\" INTEGER PRIMARY KEY, \n\t\"Maker\" INTEGER, \n\t\"Model\" TEXT UNIQUE,\n\tFOREIGN KEY (Maker) REFERENCES car_makers (Id)\n\n);"
+  },
+  {
+    "eval_id": 18,
+    "spider_dev_idx": 174,
+    "db_id": "car_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/car_1/car_1.sqlite",
+    "question": "What are the names of the countries with no car makers?",
+    "sql": "SELECT CountryName FROM countries EXCEPT SELECT T1.CountryName FROM countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.countryId  =  T2.Country;",
+    "schema": "CREATE TABLE \"car_makers\" ( \n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"Maker\" TEXT, \n\t\"FullName\" TEXT, \n\t\"Country\" TEXT,\n\tFOREIGN KEY (Country) REFERENCES countries(CountryId)\n);\n\nCREATE TABLE \"car_names\" ( \n\t\"MakeId\" INTEGER PRIMARY KEY, \n\t\"Model\" TEXT, \n\t\"Make\" TEXT,\n\tFOREIGN KEY (Model) REFERENCES model_list (Model)\n);\n\nCREATE TABLE \"cars_data\" (\n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"MPG\" TEXT, \n\t\"Cylinders\" INTEGER, \n\t\"Edispl\" REAL, \n\t\"Horsepower\" TEXT, \n\t\"Weight\" INTEGER, \n\t\"Accelerate\" REAL, \n\t\"Year\" INTEGER,\n\tFOREIGN KEY (Id) REFERENCES car_names (MakeId)\n);\n\nCREATE TABLE \"continents\" ( \n\t\"ContId\" INTEGER PRIMARY KEY, \n\t\"Continent\" TEXT \n);\n\nCREATE TABLE \"countries\" (\n\t\"CountryId\" INTEGER PRIMARY KEY, \n\t\"CountryName\" TEXT, \n\t\"Continent\" INTEGER,\n\tFOREIGN KEY (Continent) REFERENCES continents(ContId)\n);\n\nCREATE TABLE \"model_list\" ( \n\t\"ModelId\" INTEGER PRIMARY KEY, \n\t\"Maker\" INTEGER, \n\t\"Model\" TEXT UNIQUE,\n\tFOREIGN KEY (Maker) REFERENCES car_makers (Id)\n\n);"
+  },
+  {
+    "eval_id": 19,
+    "spider_dev_idx": 790,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "What are the population, name and leader of the country with the largest area?",
+    "sql": "SELECT Name ,  population ,  HeadOfState FROM country ORDER BY SurfaceArea DESC LIMIT 1",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 20,
+    "spider_dev_idx": 594,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "What are the titles of all cartoons directed by Ben Jones or Brandon Vietti?",
+    "sql": "SELECT Title FROM Cartoon WHERE Directed_by = \"Ben Jones\" OR Directed_by = \"Brandon Vietti\";",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 21,
+    "spider_dev_idx": 496,
+    "db_id": "battle_death",
+    "db_path": "E:/Projects/SQL/data/spider_db/battle_death/battle_death.sqlite",
+    "question": "What are the death and injury situations caused by the ship with tonnage 't'?",
+    "sql": "SELECT T1.killed ,  T1.injured FROM death AS T1 JOIN ship AS t2 ON T1.caused_by_ship_id  =  T2.id WHERE T2.tonnage  =  't'",
+    "schema": "CREATE TABLE \"battle\" (\n\"id\" int,\n\"name\" text,\n\"date\" text,\n\"bulgarian_commander\" text,\n\"latin_commander\" text,\n\"result\" text,\nprimary key(\"id\")\n);\n\nCREATE TABLE \"death\" (\n\"caused_by_ship_id\" int,\n\"id\" int,\n\"note\" text,\n\"killed\" int,\n\"injured\" int,\nprimary key(\"id\"),\nforeign key (\"caused_by_ship_id\") references `ship`(\"id\") \n);\n\nCREATE TABLE \"ship\" (\n\"lost_in_battle\" int,\n\"id\" int,\n\"name\" text,\n\"tonnage\" text,\n\"ship_type\" text,\n\"location\" text,\n\"disposition_of_ship\" text,\nprimary key(\"id\"),\nforeign key (`lost_in_battle`) references `battle`(\"id\") \n);"
+  },
+  {
+    "eval_id": 22,
+    "spider_dev_idx": 680,
+    "db_id": "poker_player",
+    "db_path": "E:/Projects/SQL/data/spider_db/poker_player/poker_player.sqlite",
+    "question": "What are the names and birth dates of people, ordered by their names in alphabetical order?",
+    "sql": "SELECT Name ,  Birth_Date FROM people ORDER BY Name ASC",
+    "schema": "CREATE TABLE \"people\" (\n\"People_ID\" int,\n\"Nationality\" text,\n\"Name\" text,\n\"Birth_Date\" text,\n\"Height\" real,\nPRIMARY KEY (\"People_ID\")\n);\n\nCREATE TABLE \"poker_player\" (\n\"Poker_Player_ID\" int,\n\"People_ID\" int,\n\"Final_Table_Made\" real,\n\"Best_Finish\" real,\n\"Money_Rank\" real,\n\"Earnings\" real,\nPRIMARY KEY (\"Poker_Player_ID\"),\nFOREIGN KEY (\"People_ID\") REFERENCES `people`(\"People_ID\")\n);"
+  },
+  {
+    "eval_id": 23,
+    "spider_dev_idx": 810,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "What is the total population and average area of countries in the continent of North America whose area is bigger than 3000 ?",
+    "sql": "select sum(population) ,  avg(surfacearea) from country where continent  =  \"north america\" and surfacearea  >  3000",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 24,
+    "spider_dev_idx": 832,
+    "db_id": "orchestra",
+    "db_path": "E:/Projects/SQL/data/spider_db/orchestra/orchestra.sqlite",
+    "question": "What are the maximum and minimum share of performances whose type is not \"Live final\".",
+    "sql": "SELECT max(SHARE) ,  min(SHARE) FROM performance WHERE TYPE != \"Live final\"",
+    "schema": "CREATE TABLE \"conductor\" (\n\"Conductor_ID\" int,\n\"Name\" text,\n\"Age\" int,\n\"Nationality\" text,\n\"Year_of_Work\" int,\nPRIMARY KEY (\"Conductor_ID\")\n);\n\nCREATE TABLE \"orchestra\" (\n\"Orchestra_ID\" int,\n\"Orchestra\" text,\n\"Conductor_ID\" int,\n\"Record_Company\" text,\n\"Year_of_Founded\" real,\n\"Major_Record_Format\" text,\nPRIMARY KEY (\"Orchestra_ID\"),\nFOREIGN KEY (`Conductor_ID`) REFERENCES `conductor`(`Conductor_ID`)\n);\n\nCREATE TABLE \"performance\" (\n\"Performance_ID\" int,\n\"Orchestra_ID\" int,\n\"Type\" text,\n\"Date\" text,\n\"Official_ratings_(millions)\" real,\n\"Weekly_rank\" text,\n\"Share\" text,\nPRIMARY KEY (\"Performance_ID\"),\nFOREIGN KEY (`Orchestra_ID`) REFERENCES `orchestra`(`Orchestra_ID`)\n);\n\nCREATE TABLE \"show\" (\n\"Show_ID\" int,\n\"Performance_ID\" int,\n\"If_first_show\" bool,\n\"Result\" text,\n\"Attendance\" real,\nFOREIGN KEY (`Performance_ID`) REFERENCES `performance`(`Performance_ID`)\n);"
+  },
+  {
+    "eval_id": 25,
+    "spider_dev_idx": 924,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "Which dogs have not cost their owner more than 1000 for treatment ? List the dog names .",
+    "sql": "select name from dogs where dog_id not in ( select dog_id from treatments group by dog_id having sum(cost_of_treatment)  >  1000 )",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 26,
+    "spider_dev_idx": 33,
+    "db_id": "concert_singer",
+    "db_path": "E:/Projects/SQL/data/spider_db/concert_singer/concert_singer.sqlite",
+    "question": "Show the name and theme for all concerts and the number of singers in each concert.",
+    "sql": "SELECT T2.concert_name ,  T2.theme ,  count(*) FROM singer_in_concert AS T1 JOIN concert AS T2 ON T1.concert_id  =  T2.concert_id GROUP BY T2.concert_id",
+    "schema": "CREATE TABLE \"concert\" (\n\"concert_ID\" int,\n\"concert_Name\" text,\n\"Theme\" text,\n\"Stadium_ID\" text,\n\"Year\" text,\nPRIMARY KEY (\"concert_ID\"),\nFOREIGN KEY (\"Stadium_ID\") REFERENCES \"stadium\"(\"Stadium_ID\")\n);\n\nCREATE TABLE \"singer\" (\n\"Singer_ID\" int,\n\"Name\" text,\n\"Country\" text,\n\"Song_Name\" text,\n\"Song_release_year\" text,\n\"Age\" int,\n\"Is_male\" bool,\nPRIMARY KEY (\"Singer_ID\")\n);\n\nCREATE TABLE \"singer_in_concert\" (\n\"concert_ID\" int,\n\"Singer_ID\" text,\nPRIMARY KEY (\"concert_ID\",\"Singer_ID\"),\nFOREIGN KEY (\"concert_ID\") REFERENCES \"concert\"(\"concert_ID\"),\nFOREIGN KEY (\"Singer_ID\") REFERENCES \"singer\"(\"Singer_ID\")\n);\n\nCREATE TABLE \"stadium\" (\n\"Stadium_ID\" int,\n\"Location\" text,\n\"Name\" text,\n\"Capacity\" int,\n\"Highest\" int,\n\"Lowest\" int,\n\"Average\" int,\nPRIMARY KEY (\"Stadium_ID\")\n);"
+  },
+  {
+    "eval_id": 27,
+    "spider_dev_idx": 138,
+    "db_id": "car_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/car_1/car_1.sqlite",
+    "question": "What is the average edispl for all volvos?",
+    "sql": "SELECT avg(T2.edispl) FROM CAR_NAMES AS T1 JOIN CARS_DATA AS T2 ON T1.MakeId  =  T2.Id WHERE T1.Model  =  'volvo';",
+    "schema": "CREATE TABLE \"car_makers\" ( \n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"Maker\" TEXT, \n\t\"FullName\" TEXT, \n\t\"Country\" TEXT,\n\tFOREIGN KEY (Country) REFERENCES countries(CountryId)\n);\n\nCREATE TABLE \"car_names\" ( \n\t\"MakeId\" INTEGER PRIMARY KEY, \n\t\"Model\" TEXT, \n\t\"Make\" TEXT,\n\tFOREIGN KEY (Model) REFERENCES model_list (Model)\n);\n\nCREATE TABLE \"cars_data\" (\n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"MPG\" TEXT, \n\t\"Cylinders\" INTEGER, \n\t\"Edispl\" REAL, \n\t\"Horsepower\" TEXT, \n\t\"Weight\" INTEGER, \n\t\"Accelerate\" REAL, \n\t\"Year\" INTEGER,\n\tFOREIGN KEY (Id) REFERENCES car_names (MakeId)\n);\n\nCREATE TABLE \"continents\" ( \n\t\"ContId\" INTEGER PRIMARY KEY, \n\t\"Continent\" TEXT \n);\n\nCREATE TABLE \"countries\" (\n\t\"CountryId\" INTEGER PRIMARY KEY, \n\t\"CountryName\" TEXT, \n\t\"Continent\" INTEGER,\n\tFOREIGN KEY (Continent) REFERENCES continents(ContId)\n);\n\nCREATE TABLE \"model_list\" ( \n\t\"ModelId\" INTEGER PRIMARY KEY, \n\t\"Maker\" INTEGER, \n\t\"Model\" TEXT UNIQUE,\n\tFOREIGN KEY (Maker) REFERENCES car_makers (Id)\n\n);"
+  },
+  {
+    "eval_id": 28,
+    "spider_dev_idx": 372,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "What are the ids of documents that have 2 or more paragraphs?",
+    "sql": "SELECT document_id FROM Paragraphs GROUP BY document_id HAVING count(*)  >=  2",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 29,
+    "spider_dev_idx": 281,
+    "db_id": "employee_hire_evaluation",
+    "db_path": "E:/Projects/SQL/data/spider_db/employee_hire_evaluation/employee_hire_evaluation.sqlite",
+    "question": "Find the names of employees who never won any award in the evaluation.",
+    "sql": "SELECT name FROM employee WHERE Employee_ID NOT IN (SELECT Employee_ID FROM evaluation)",
+    "schema": "CREATE TABLE \"employee\" (\n\"Employee_ID\" int,\n\"Name\" text,\n\"Age\" int,\n\"City\" text,\nPRIMARY KEY (\"Employee_ID\")\n);\n\nCREATE TABLE \"evaluation\" (\n\"Employee_ID\" text,\n\"Year_awarded\" text,\n\"Bonus\" real,\nPRIMARY KEY (\"Employee_ID\",\"Year_awarded\"),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"hiring\" (\n\"Shop_ID\" int,\n\"Employee_ID\" int,\n\"Start_from\" text,\n\"Is_full_time\" bool,\nPRIMARY KEY (\"Employee_ID\"),\nFOREIGN KEY (`Shop_ID`) REFERENCES `shop`(`Shop_ID`),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"shop\" (\n\"Shop_ID\" int,\n\"Name\" text,\n\"Location\" text,\n\"District\" text,\n\"Number_products\" int,\n\"Manager_name\" text,\nPRIMARY KEY (\"Shop_ID\")\n);"
+  },
+  {
+    "eval_id": 30,
+    "spider_dev_idx": 638,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "What is the series name and country of all TV channels that are playing cartoons directed by Ben Jones and cartoons directed by Michael Chang?",
+    "sql": "SELECT T1.series_name ,  T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.directed_by  =  'Michael Chang' INTERSECT SELECT T1.series_name ,  T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.directed_by  =  'Ben Jones'",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 31,
+    "spider_dev_idx": 745,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "What is the number of nations that use English and Dutch?",
+    "sql": "SELECT COUNT(*) FROM (SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"English\" INTERSECT SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"Dutch\")",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 32,
+    "spider_dev_idx": 34,
+    "db_id": "concert_singer",
+    "db_path": "E:/Projects/SQL/data/spider_db/concert_singer/concert_singer.sqlite",
+    "question": "What are the names , themes , and number of singers for every concert ?",
+    "sql": "select t2.concert_name ,  t2.theme ,  count(*) from singer_in_concert as t1 join concert as t2 on t1.concert_id  =  t2.concert_id group by t2.concert_id",
+    "schema": "CREATE TABLE \"concert\" (\n\"concert_ID\" int,\n\"concert_Name\" text,\n\"Theme\" text,\n\"Stadium_ID\" text,\n\"Year\" text,\nPRIMARY KEY (\"concert_ID\"),\nFOREIGN KEY (\"Stadium_ID\") REFERENCES \"stadium\"(\"Stadium_ID\")\n);\n\nCREATE TABLE \"singer\" (\n\"Singer_ID\" int,\n\"Name\" text,\n\"Country\" text,\n\"Song_Name\" text,\n\"Song_release_year\" text,\n\"Age\" int,\n\"Is_male\" bool,\nPRIMARY KEY (\"Singer_ID\")\n);\n\nCREATE TABLE \"singer_in_concert\" (\n\"concert_ID\" int,\n\"Singer_ID\" text,\nPRIMARY KEY (\"concert_ID\",\"Singer_ID\"),\nFOREIGN KEY (\"concert_ID\") REFERENCES \"concert\"(\"concert_ID\"),\nFOREIGN KEY (\"Singer_ID\") REFERENCES \"singer\"(\"Singer_ID\")\n);\n\nCREATE TABLE \"stadium\" (\n\"Stadium_ID\" int,\n\"Location\" text,\n\"Name\" text,\n\"Capacity\" int,\n\"Highest\" int,\n\"Lowest\" int,\n\"Average\" int,\nPRIMARY KEY (\"Stadium_ID\")\n);"
+  },
+  {
+    "eval_id": 33,
+    "spider_dev_idx": 899,
+    "db_id": "network_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/network_1/network_1.sqlite",
+    "question": "What are the ids of students who both have friends and are liked?",
+    "sql": "SELECT student_id FROM Friend INTERSECT SELECT liked_id FROM Likes",
+    "schema": "CREATE TABLE Friend(\n\tstudent_id int, \n\tfriend_id int,\n\tprimary key (student_id,friend_id),\n\tforeign key(student_id) references Highschooler(ID),\n\tforeign key (friend_id) references Highschooler(ID)\n);\n\nCREATE TABLE Highschooler(\n\tID int primary key, \n\tname text, \n\tgrade int);\n\nCREATE TABLE Likes(\n\tstudent_id int, \n\tliked_id int,\n\tprimary key (student_id, liked_id),\n        foreign key (liked_id) references Highschooler(ID),\n        foreign key (student_id) references Highschooler(ID)\n);"
+  },
+  {
+    "eval_id": 34,
+    "spider_dev_idx": 349,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "What is the template type descriptions for template type code \"AD\".",
+    "sql": "SELECT template_type_description FROM Ref_template_types WHERE template_type_code  =  \"AD\"",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 35,
+    "spider_dev_idx": 18,
+    "db_id": "concert_singer",
+    "db_path": "E:/Projects/SQL/data/spider_db/concert_singer/concert_singer.sqlite",
+    "question": "What is the name and capacity for the stadium with highest average attendance?",
+    "sql": "SELECT name ,  capacity FROM stadium ORDER BY average DESC LIMIT 1",
+    "schema": "CREATE TABLE \"concert\" (\n\"concert_ID\" int,\n\"concert_Name\" text,\n\"Theme\" text,\n\"Stadium_ID\" text,\n\"Year\" text,\nPRIMARY KEY (\"concert_ID\"),\nFOREIGN KEY (\"Stadium_ID\") REFERENCES \"stadium\"(\"Stadium_ID\")\n);\n\nCREATE TABLE \"singer\" (\n\"Singer_ID\" int,\n\"Name\" text,\n\"Country\" text,\n\"Song_Name\" text,\n\"Song_release_year\" text,\n\"Age\" int,\n\"Is_male\" bool,\nPRIMARY KEY (\"Singer_ID\")\n);\n\nCREATE TABLE \"singer_in_concert\" (\n\"concert_ID\" int,\n\"Singer_ID\" text,\nPRIMARY KEY (\"concert_ID\",\"Singer_ID\"),\nFOREIGN KEY (\"concert_ID\") REFERENCES \"concert\"(\"concert_ID\"),\nFOREIGN KEY (\"Singer_ID\") REFERENCES \"singer\"(\"Singer_ID\")\n);\n\nCREATE TABLE \"stadium\" (\n\"Stadium_ID\" int,\n\"Location\" text,\n\"Name\" text,\n\"Capacity\" int,\n\"Highest\" int,\n\"Lowest\" int,\n\"Average\" int,\nPRIMARY KEY (\"Stadium_ID\")\n);"
+  },
+  {
+    "eval_id": 36,
+    "spider_dev_idx": 800,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "What are the names and areas of countries with the top 5 largest area?",
+    "sql": "SELECT Name ,  SurfaceArea FROM country ORDER BY SurfaceArea DESC LIMIT 5",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 37,
+    "spider_dev_idx": 522,
+    "db_id": "student_transcripts_tracking",
+    "db_path": "E:/Projects/SQL/data/spider_db/student_transcripts_tracking/student_transcripts_tracking.sqlite",
+    "question": "How many degrees does the engineering department have?",
+    "sql": "SELECT count(*) FROM Departments AS T1 JOIN Degree_Programs AS T2 ON T1.department_id  =  T2.department_id WHERE T1.department_name  =  'engineer'",
+    "schema": "CREATE TABLE `Addresses` (\n`address_id` INTEGER PRIMARY KEY,\n`line_1` VARCHAR(255),\n`line_2` VARCHAR(255),\n`line_3` VARCHAR(255),\n`city` VARCHAR(255),\n`zip_postcode` VARCHAR(20),\n`state_province_county` VARCHAR(255),\n`country` VARCHAR(255),\n`other_address_details` VARCHAR(255)\n);\n\nCREATE TABLE `Courses` (\n`course_id` INTEGER PRIMARY KEY,\n`course_name` VARCHAR(255),\n`course_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Degree_Programs` (\n`degree_program_id` INTEGER PRIMARY KEY,\n`department_id` INTEGER NOT NULL,\n`degree_summary_name` VARCHAR(255),\n`degree_summary_description` VARCHAR(255),\n`other_details` VARCHAR(255),\nFOREIGN KEY (`department_id` ) REFERENCES `Departments`(`department_id` )\n);\n\nCREATE TABLE `Departments` (\n`department_id` INTEGER PRIMARY KEY,\n`department_name` VARCHAR(255),\n`department_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Sections` (\n`section_id` INTEGER PRIMARY KEY,\n`course_id` INTEGER NOT NULL,\n`section_name` VARCHAR(255),\n`section_description` VARCHAR(255),\n`other_details` VARCHAR(255),\nFOREIGN KEY (`course_id` ) REFERENCES `Courses`(`course_id` )\n);\n\nCREATE TABLE `Semesters` (\n`semester_id` INTEGER PRIMARY KEY,\n`semester_name` VARCHAR(255),\n`semester_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Student_Enrolment` (\n`student_enrolment_id` INTEGER PRIMARY KEY,\n`degree_program_id` INTEGER NOT NULL,\n`semester_id` INTEGER NOT NULL,\n`student_id` INTEGER NOT NULL,\n`other_details` VARCHAR(255),\nFOREIGN KEY (`degree_program_id` ) REFERENCES `Degree_Programs`(`degree_program_id` ),\nFOREIGN KEY (`semester_id` ) REFERENCES `Semesters`(`semester_id` ),\nFOREIGN KEY (`student_id` ) REFERENCES `Students`(`student_id` )\n);\n\nCREATE TABLE `Student_Enrolment_Courses` (\n`student_course_id` INTEGER PRIMARY KEY,\n`course_id` INTEGER NOT NULL,\n`student_enrolment_id` INTEGER NOT NULL,\nFOREIGN KEY (`course_id` ) REFERENCES `Courses`(`course_id` ),\nFOREIGN KEY (`student_enrolment_id` ) REFERENCES `Student_Enrolment`(`student_enrolment_id` )\n);\n\nCREATE TABLE `Students` (\n`student_id` INTEGER PRIMARY KEY,\n`current_address_id` INTEGER NOT NULL,\n`permanent_address_id` INTEGER NOT NULL,\n`first_name` VARCHAR(80),\n`middle_name` VARCHAR(40),\n`last_name` VARCHAR(40),\n`cell_mobile_number` VARCHAR(40),\n`email_address` VARCHAR(40),\n`ssn` VARCHAR(40),\n`date_first_registered` DATETIME,\n`date_left` DATETIME,\n`other_student_details` VARCHAR(255),\nFOREIGN KEY (`current_address_id` ) REFERENCES `Addresses`(`address_id` ),\nFOREIGN KEY (`permanent_address_id` ) REFERENCES `Addresses`(`address_id` )\n);\n\nCREATE TABLE `Transcript_Contents` (\n`student_course_id` INTEGER NOT NULL,\n`transcript_id` INTEGER NOT NULL,\nFOREIGN KEY (`student_course_id` ) REFERENCES `Student_Enrolment_Courses`(`student_course_id` ),\nFOREIGN KEY (`transcript_id` ) REFERENCES `Transcripts`(`transcript_id` )\n);\n\nCREATE TABLE `Transcripts` (\n`transcript_id` INTEGER PRIMARY KEY,\n`transcript_date` DATETIME,\n`other_details` VARCHAR(255)\n);"
+  },
+  {
+    "eval_id": 38,
+    "spider_dev_idx": 767,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "How many people live in countries that do not speak English?",
+    "sql": "SELECT sum(Population) FROM country WHERE Name NOT IN (SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"English\")",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 39,
+    "spider_dev_idx": 456,
+    "db_id": "wta_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/wta_1/wta_1.sqlite",
+    "question": "What are the full names of all players, sorted by birth date?",
+    "sql": "SELECT first_name ,  last_name FROM players ORDER BY birth_date",
+    "schema": "CREATE TABLE matches(\n  \"best_of\" INT,\n  \"draw_size\" INT,\n  \"loser_age\" FLOAT,\n  \"loser_entry\" TEXT,\n  \"loser_hand\" TEXT,\n  \"loser_ht\" INT,\n  \"loser_id\" INT,\n  \"loser_ioc\" TEXT,\n  \"loser_name\" TEXT,\n  \"loser_rank\" INT,\n  \"loser_rank_points\" INT,\n  \"loser_seed\" INT,\n  \"match_num\" INT,\n  \"minutes\" INT,\n  \"round\" TEXT,\n  \"score\" TEXT,\n  \"surface\" TEXT,\n  \"tourney_date\" DATE,\n  \"tourney_id\" TEXT,\n  \"tourney_level\" TEXT,\n  \"tourney_name\" TEXT,\n  \"winner_age\" FLOAT,\n  \"winner_entry\" TEXT,\n  \"winner_hand\" TEXT,\n  \"winner_ht\" INT,\n  \"winner_id\" INT,\n  \"winner_ioc\" TEXT,\n  \"winner_name\" TEXT,\n  \"winner_rank\" INT,\n  \"winner_rank_points\" INT,\n  \"winner_seed\" INT,\n  \"year\" INT,\n  FOREIGN KEY(loser_id) REFERENCES players(player_id),\n  FOREIGN KEY(winner_id) REFERENCES players(player_id)\n);\n\nCREATE TABLE players(\n    \"player_id\" INT PRIMARY KEY,\n    \"first_name\" TEXT,\n    \"last_name\" TEXT,\n    \"hand\" TEXT,\n    \"birth_date\" DATE,\n    \"country_code\" TEXT\n);\n\nCREATE TABLE rankings(\"ranking_date\" DATE,\"ranking\" INT,\"player_id\" INT,\"ranking_points\" INT,\"tours\" INT,FOREIGN KEY(player_id) REFERENCES players(player_id));"
+  },
+  {
+    "eval_id": 40,
+    "spider_dev_idx": 993,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "What is the charge amount of the most expensive charge type?",
+    "sql": "SELECT max(charge_amount) FROM Charges",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 41,
+    "spider_dev_idx": 936,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "Which owner has paid for the most treatments on his or her dogs? List the owner id and last name.",
+    "sql": "SELECT T1.owner_id ,  T1.last_name FROM Owners AS T1 JOIN Dogs AS T2 ON T1.owner_id  =  T2.owner_id JOIN Treatments AS T3 ON T2.dog_id  =  T3.dog_id GROUP BY T1.owner_id ORDER BY count(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 42,
+    "spider_dev_idx": 792,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "Return the country name and the numbers of languages spoken for each country that speaks at least 3 languages.",
+    "sql": "SELECT COUNT(T2.Language) ,  T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode GROUP BY T1.Name HAVING COUNT(*)  >  2",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 43,
+    "spider_dev_idx": 858,
+    "db_id": "orchestra",
+    "db_path": "E:/Projects/SQL/data/spider_db/orchestra/orchestra.sqlite",
+    "question": "Find the number of orchestras whose record format is \"CD\" or \"DVD\".",
+    "sql": "SELECT COUNT(*) FROM orchestra WHERE Major_Record_Format  =  \"CD\" OR Major_Record_Format  =  \"DVD\"",
+    "schema": "CREATE TABLE \"conductor\" (\n\"Conductor_ID\" int,\n\"Name\" text,\n\"Age\" int,\n\"Nationality\" text,\n\"Year_of_Work\" int,\nPRIMARY KEY (\"Conductor_ID\")\n);\n\nCREATE TABLE \"orchestra\" (\n\"Orchestra_ID\" int,\n\"Orchestra\" text,\n\"Conductor_ID\" int,\n\"Record_Company\" text,\n\"Year_of_Founded\" real,\n\"Major_Record_Format\" text,\nPRIMARY KEY (\"Orchestra_ID\"),\nFOREIGN KEY (`Conductor_ID`) REFERENCES `conductor`(`Conductor_ID`)\n);\n\nCREATE TABLE \"performance\" (\n\"Performance_ID\" int,\n\"Orchestra_ID\" int,\n\"Type\" text,\n\"Date\" text,\n\"Official_ratings_(millions)\" real,\n\"Weekly_rank\" text,\n\"Share\" text,\nPRIMARY KEY (\"Performance_ID\"),\nFOREIGN KEY (`Orchestra_ID`) REFERENCES `orchestra`(`Orchestra_ID`)\n);\n\nCREATE TABLE \"show\" (\n\"Show_ID\" int,\n\"Performance_ID\" int,\n\"If_first_show\" bool,\n\"Result\" text,\n\"Attendance\" real,\nFOREIGN KEY (`Performance_ID`) REFERENCES `performance`(`Performance_ID`)\n);"
+  },
+  {
+    "eval_id": 44,
+    "spider_dev_idx": 635,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "which countries' tv channels are not playing any cartoon written by Todd Casey?",
+    "sql": "SELECT country FROM TV_Channel EXCEPT SELECT T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.written_by  =  'Todd Casey'",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 45,
+    "spider_dev_idx": 287,
+    "db_id": "employee_hire_evaluation",
+    "db_path": "E:/Projects/SQL/data/spider_db/employee_hire_evaluation/employee_hire_evaluation.sqlite",
+    "question": "Find the number of employees hired in each shop; show the shop name as well.",
+    "sql": "SELECT count(*) ,  t2.name FROM hiring AS t1 JOIN shop AS t2 ON t1.shop_id  =  t2.shop_id GROUP BY t2.name",
+    "schema": "CREATE TABLE \"employee\" (\n\"Employee_ID\" int,\n\"Name\" text,\n\"Age\" int,\n\"City\" text,\nPRIMARY KEY (\"Employee_ID\")\n);\n\nCREATE TABLE \"evaluation\" (\n\"Employee_ID\" text,\n\"Year_awarded\" text,\n\"Bonus\" real,\nPRIMARY KEY (\"Employee_ID\",\"Year_awarded\"),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"hiring\" (\n\"Shop_ID\" int,\n\"Employee_ID\" int,\n\"Start_from\" text,\n\"Is_full_time\" bool,\nPRIMARY KEY (\"Employee_ID\"),\nFOREIGN KEY (`Shop_ID`) REFERENCES `shop`(`Shop_ID`),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"shop\" (\n\"Shop_ID\" int,\n\"Name\" text,\n\"Location\" text,\n\"District\" text,\n\"Number_products\" int,\n\"Manager_name\" text,\nPRIMARY KEY (\"Shop_ID\")\n);"
+  },
+  {
+    "eval_id": 46,
+    "spider_dev_idx": 900,
+    "db_id": "network_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/network_1/network_1.sqlite",
+    "question": "Show name of all students who have some friends and also are liked by someone else.",
+    "sql": "SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id INTERSECT SELECT T2.name FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.liked_id  =  T2.id",
+    "schema": "CREATE TABLE Friend(\n\tstudent_id int, \n\tfriend_id int,\n\tprimary key (student_id,friend_id),\n\tforeign key(student_id) references Highschooler(ID),\n\tforeign key (friend_id) references Highschooler(ID)\n);\n\nCREATE TABLE Highschooler(\n\tID int primary key, \n\tname text, \n\tgrade int);\n\nCREATE TABLE Likes(\n\tstudent_id int, \n\tliked_id int,\n\tprimary key (student_id, liked_id),\n        foreign key (liked_id) references Highschooler(ID),\n        foreign key (student_id) references Highschooler(ID)\n);"
+  },
+  {
+    "eval_id": 47,
+    "spider_dev_idx": 298,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "Count the number of documents.",
+    "sql": "SELECT count(*) FROM Documents",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 48,
+    "spider_dev_idx": 193,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "Which airline has abbreviation 'UAL'?",
+    "sql": "SELECT Airline FROM AIRLINES WHERE Abbreviation  =  \"UAL\"",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 49,
+    "spider_dev_idx": 692,
+    "db_id": "voter_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/voter_1/voter_1.sqlite",
+    "question": "What are the names of the contestants whose names are not 'Jessie Alloway'",
+    "sql": "SELECT contestant_name FROM contestants WHERE contestant_name != 'Jessie Alloway'",
+    "schema": "CREATE TABLE `AREA_CODE_STATE` (\n  `area_code` integer NOT NULL\n,  `state` varchar(2) NOT NULL\n,  PRIMARY KEY (`area_code`)\n);\n\nCREATE TABLE `CONTESTANTS` (\n  `contestant_number` integer\n,  `contestant_name` varchar(50) NOT NULL\n,  PRIMARY KEY (`contestant_number`)\n);\n\nCREATE TABLE `VOTES` (\n  `vote_id` integer NOT NULL PRIMARY KEY\n,  `phone_number` integer NOT NULL\n,  `state` varchar(2) NOT NULL\n,  `contestant_number` integer NOT NULL\n,  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP\n, \tFOREIGN KEY (`state`) REFERENCES `AREA_CODE_STATE`(`state`)\n, \tFOREIGN KEY (`contestant_number`) REFERENCES `CONTESTANTS`(`contestant_number`)\n);"
+  },
+  {
+    "eval_id": 50,
+    "spider_dev_idx": 605,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "List the language used least number of TV Channel. List language and number of TV Channel.",
+    "sql": "SELECT LANGUAGE ,  count(*) FROM TV_Channel GROUP BY LANGUAGE ORDER BY count(*) ASC LIMIT 1;",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 51,
+    "spider_dev_idx": 683,
+    "db_id": "poker_player",
+    "db_path": "E:/Projects/SQL/data/spider_db/poker_player/poker_player.sqlite",
+    "question": "List the names of people that are not poker players.",
+    "sql": "SELECT Name FROM people WHERE People_ID NOT IN (SELECT People_ID FROM poker_player)",
+    "schema": "CREATE TABLE \"people\" (\n\"People_ID\" int,\n\"Nationality\" text,\n\"Name\" text,\n\"Birth_Date\" text,\n\"Height\" real,\nPRIMARY KEY (\"People_ID\")\n);\n\nCREATE TABLE \"poker_player\" (\n\"Poker_Player_ID\" int,\n\"People_ID\" int,\n\"Final_Table_Made\" real,\n\"Best_Finish\" real,\n\"Money_Rank\" real,\n\"Earnings\" real,\nPRIMARY KEY (\"Poker_Player_ID\"),\nFOREIGN KEY (\"People_ID\") REFERENCES `people`(\"People_ID\")\n);"
+  },
+  {
+    "eval_id": 52,
+    "spider_dev_idx": 582,
+    "db_id": "student_transcripts_tracking",
+    "db_path": "E:/Projects/SQL/data/spider_db/student_transcripts_tracking/student_transcripts_tracking.sqlite",
+    "question": "What is the description for the section named h?",
+    "sql": "SELECT section_description FROM Sections WHERE section_name  =  'h'",
+    "schema": "CREATE TABLE `Addresses` (\n`address_id` INTEGER PRIMARY KEY,\n`line_1` VARCHAR(255),\n`line_2` VARCHAR(255),\n`line_3` VARCHAR(255),\n`city` VARCHAR(255),\n`zip_postcode` VARCHAR(20),\n`state_province_county` VARCHAR(255),\n`country` VARCHAR(255),\n`other_address_details` VARCHAR(255)\n);\n\nCREATE TABLE `Courses` (\n`course_id` INTEGER PRIMARY KEY,\n`course_name` VARCHAR(255),\n`course_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Degree_Programs` (\n`degree_program_id` INTEGER PRIMARY KEY,\n`department_id` INTEGER NOT NULL,\n`degree_summary_name` VARCHAR(255),\n`degree_summary_description` VARCHAR(255),\n`other_details` VARCHAR(255),\nFOREIGN KEY (`department_id` ) REFERENCES `Departments`(`department_id` )\n);\n\nCREATE TABLE `Departments` (\n`department_id` INTEGER PRIMARY KEY,\n`department_name` VARCHAR(255),\n`department_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Sections` (\n`section_id` INTEGER PRIMARY KEY,\n`course_id` INTEGER NOT NULL,\n`section_name` VARCHAR(255),\n`section_description` VARCHAR(255),\n`other_details` VARCHAR(255),\nFOREIGN KEY (`course_id` ) REFERENCES `Courses`(`course_id` )\n);\n\nCREATE TABLE `Semesters` (\n`semester_id` INTEGER PRIMARY KEY,\n`semester_name` VARCHAR(255),\n`semester_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Student_Enrolment` (\n`student_enrolment_id` INTEGER PRIMARY KEY,\n`degree_program_id` INTEGER NOT NULL,\n`semester_id` INTEGER NOT NULL,\n`student_id` INTEGER NOT NULL,\n`other_details` VARCHAR(255),\nFOREIGN KEY (`degree_program_id` ) REFERENCES `Degree_Programs`(`degree_program_id` ),\nFOREIGN KEY (`semester_id` ) REFERENCES `Semesters`(`semester_id` ),\nFOREIGN KEY (`student_id` ) REFERENCES `Students`(`student_id` )\n);\n\nCREATE TABLE `Student_Enrolment_Courses` (\n`student_course_id` INTEGER PRIMARY KEY,\n`course_id` INTEGER NOT NULL,\n`student_enrolment_id` INTEGER NOT NULL,\nFOREIGN KEY (`course_id` ) REFERENCES `Courses`(`course_id` ),\nFOREIGN KEY (`student_enrolment_id` ) REFERENCES `Student_Enrolment`(`student_enrolment_id` )\n);\n\nCREATE TABLE `Students` (\n`student_id` INTEGER PRIMARY KEY,\n`current_address_id` INTEGER NOT NULL,\n`permanent_address_id` INTEGER NOT NULL,\n`first_name` VARCHAR(80),\n`middle_name` VARCHAR(40),\n`last_name` VARCHAR(40),\n`cell_mobile_number` VARCHAR(40),\n`email_address` VARCHAR(40),\n`ssn` VARCHAR(40),\n`date_first_registered` DATETIME,\n`date_left` DATETIME,\n`other_student_details` VARCHAR(255),\nFOREIGN KEY (`current_address_id` ) REFERENCES `Addresses`(`address_id` ),\nFOREIGN KEY (`permanent_address_id` ) REFERENCES `Addresses`(`address_id` )\n);\n\nCREATE TABLE `Transcript_Contents` (\n`student_course_id` INTEGER NOT NULL,\n`transcript_id` INTEGER NOT NULL,\nFOREIGN KEY (`student_course_id` ) REFERENCES `Student_Enrolment_Courses`(`student_course_id` ),\nFOREIGN KEY (`transcript_id` ) REFERENCES `Transcripts`(`transcript_id` )\n);\n\nCREATE TABLE `Transcripts` (\n`transcript_id` INTEGER PRIMARY KEY,\n`transcript_date` DATETIME,\n`other_details` VARCHAR(255)\n);"
+  },
+  {
+    "eval_id": 53,
+    "spider_dev_idx": 785,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "What are the names of cities in Europe for which English is not the official language?",
+    "sql": "SELECT DISTINCT T2.Name FROM country AS T1 JOIN city AS T2 ON T2.CountryCode  =  T1.Code WHERE T1.Continent  =  'Europe' AND T1.Name NOT IN (SELECT T3.Name FROM country AS T3 JOIN countrylanguage AS T4 ON T3.Code  =  T4.CountryCode WHERE T4.IsOfficial  =  'T' AND T4.Language  =  'English')",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 54,
+    "spider_dev_idx": 395,
+    "db_id": "course_teach",
+    "db_path": "E:/Projects/SQL/data/spider_db/course_teach/course_teach.sqlite",
+    "question": "List the most common hometown of teachers.",
+    "sql": "SELECT Hometown FROM teacher GROUP BY Hometown ORDER BY COUNT(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE \"course\" (\n\"Course_ID\" int,\n\"Staring_Date\" text,\n\"Course\" text,\nPRIMARY KEY (\"Course_ID\")\n);\n\nCREATE TABLE \"course_arrange\" (\n\"Course_ID\" int,\n\"Teacher_ID\" int,\n\"Grade\" int,\nPRIMARY KEY (\"Course_ID\",\"Teacher_ID\",\"Grade\"),\nFOREIGN KEY (\"Course_ID\") REFERENCES `course`(\"Course_ID\"),\nFOREIGN KEY (\"Teacher_ID\") REFERENCES `teacher`(\"Teacher_ID\")\n);\n\nCREATE TABLE \"teacher\" (\n\"Teacher_ID\" int,\n\"Name\" text,\n\"Age\" text,\n\"Hometown\" text,\nPRIMARY KEY (\"Teacher_ID\")\n);"
+  },
+  {
+    "eval_id": 55,
+    "spider_dev_idx": 741,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "Give the name of the nation that uses the greatest amount of languages.",
+    "sql": "SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode GROUP BY T1.Name ORDER BY COUNT(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 56,
+    "spider_dev_idx": 213,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "How many flights does airline 'JetBlue Airways' have?",
+    "sql": "SELECT count(*) FROM FLIGHTS AS T1 JOIN AIRLINES AS T2 ON T1.Airline  =  T2.uid WHERE T2.Airline = \"JetBlue Airways\"",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 57,
+    "spider_dev_idx": 374,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "Return the id and name of the document with the most paragraphs.",
+    "sql": "SELECT T1.document_id ,  T2.document_name FROM Paragraphs AS T1 JOIN Documents AS T2 ON T1.document_id  =  T2.document_id GROUP BY T1.document_id ORDER BY count(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 58,
+    "spider_dev_idx": 91,
+    "db_id": "car_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/car_1/car_1.sqlite",
+    "question": "How many countries are listed?",
+    "sql": "SELECT count(*) FROM COUNTRIES;",
+    "schema": "CREATE TABLE \"car_makers\" ( \n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"Maker\" TEXT, \n\t\"FullName\" TEXT, \n\t\"Country\" TEXT,\n\tFOREIGN KEY (Country) REFERENCES countries(CountryId)\n);\n\nCREATE TABLE \"car_names\" ( \n\t\"MakeId\" INTEGER PRIMARY KEY, \n\t\"Model\" TEXT, \n\t\"Make\" TEXT,\n\tFOREIGN KEY (Model) REFERENCES model_list (Model)\n);\n\nCREATE TABLE \"cars_data\" (\n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"MPG\" TEXT, \n\t\"Cylinders\" INTEGER, \n\t\"Edispl\" REAL, \n\t\"Horsepower\" TEXT, \n\t\"Weight\" INTEGER, \n\t\"Accelerate\" REAL, \n\t\"Year\" INTEGER,\n\tFOREIGN KEY (Id) REFERENCES car_names (MakeId)\n);\n\nCREATE TABLE \"continents\" ( \n\t\"ContId\" INTEGER PRIMARY KEY, \n\t\"Continent\" TEXT \n);\n\nCREATE TABLE \"countries\" (\n\t\"CountryId\" INTEGER PRIMARY KEY, \n\t\"CountryName\" TEXT, \n\t\"Continent\" INTEGER,\n\tFOREIGN KEY (Continent) REFERENCES continents(ContId)\n);\n\nCREATE TABLE \"model_list\" ( \n\t\"ModelId\" INTEGER PRIMARY KEY, \n\t\"Maker\" INTEGER, \n\t\"Model\" TEXT UNIQUE,\n\tFOREIGN KEY (Maker) REFERENCES car_makers (Id)\n\n);"
+  },
+  {
+    "eval_id": 59,
+    "spider_dev_idx": 251,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "What are flight numbers of flights departing from City \"Aberdeen \"?",
+    "sql": "SELECT T1.FlightNo FROM FLIGHTS AS T1 JOIN AIRPORTS AS T2 ON T1.SourceAirport   =  T2.AirportCode WHERE T2.City  =  \"Aberdeen\"",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 60,
+    "spider_dev_idx": 229,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "Which airline has most number of flights?",
+    "sql": "SELECT T1.Airline FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 61,
+    "spider_dev_idx": 439,
+    "db_id": "wta_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/wta_1/wta_1.sqlite",
+    "question": "Find the highest rank of losers in all matches.",
+    "sql": "SELECT min(loser_rank) FROM matches",
+    "schema": "CREATE TABLE matches(\n  \"best_of\" INT,\n  \"draw_size\" INT,\n  \"loser_age\" FLOAT,\n  \"loser_entry\" TEXT,\n  \"loser_hand\" TEXT,\n  \"loser_ht\" INT,\n  \"loser_id\" INT,\n  \"loser_ioc\" TEXT,\n  \"loser_name\" TEXT,\n  \"loser_rank\" INT,\n  \"loser_rank_points\" INT,\n  \"loser_seed\" INT,\n  \"match_num\" INT,\n  \"minutes\" INT,\n  \"round\" TEXT,\n  \"score\" TEXT,\n  \"surface\" TEXT,\n  \"tourney_date\" DATE,\n  \"tourney_id\" TEXT,\n  \"tourney_level\" TEXT,\n  \"tourney_name\" TEXT,\n  \"winner_age\" FLOAT,\n  \"winner_entry\" TEXT,\n  \"winner_hand\" TEXT,\n  \"winner_ht\" INT,\n  \"winner_id\" INT,\n  \"winner_ioc\" TEXT,\n  \"winner_name\" TEXT,\n  \"winner_rank\" INT,\n  \"winner_rank_points\" INT,\n  \"winner_seed\" INT,\n  \"year\" INT,\n  FOREIGN KEY(loser_id) REFERENCES players(player_id),\n  FOREIGN KEY(winner_id) REFERENCES players(player_id)\n);\n\nCREATE TABLE players(\n    \"player_id\" INT PRIMARY KEY,\n    \"first_name\" TEXT,\n    \"last_name\" TEXT,\n    \"hand\" TEXT,\n    \"birth_date\" DATE,\n    \"country_code\" TEXT\n);\n\nCREATE TABLE rankings(\"ranking_date\" DATE,\"ranking\" INT,\"player_id\" INT,\"ranking_points\" INT,\"tours\" INT,FOREIGN KEY(player_id) REFERENCES players(player_id));"
+  },
+  {
+    "eval_id": 62,
+    "spider_dev_idx": 708,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "Which continent is Anguilla in?",
+    "sql": "SELECT Continent FROM country WHERE Name  =  \"Anguilla\"",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 63,
+    "spider_dev_idx": 651,
+    "db_id": "poker_player",
+    "db_path": "E:/Projects/SQL/data/spider_db/poker_player/poker_player.sqlite",
+    "question": "List the final tables made and the best finishes of poker players.",
+    "sql": "SELECT Final_Table_Made ,  Best_Finish FROM poker_player",
+    "schema": "CREATE TABLE \"people\" (\n\"People_ID\" int,\n\"Nationality\" text,\n\"Name\" text,\n\"Birth_Date\" text,\n\"Height\" real,\nPRIMARY KEY (\"People_ID\")\n);\n\nCREATE TABLE \"poker_player\" (\n\"Poker_Player_ID\" int,\n\"People_ID\" int,\n\"Final_Table_Made\" real,\n\"Best_Finish\" real,\n\"Money_Rank\" real,\n\"Earnings\" real,\nPRIMARY KEY (\"Poker_Player_ID\"),\nFOREIGN KEY (\"People_ID\") REFERENCES `people`(\"People_ID\")\n);"
+  },
+  {
+    "eval_id": 64,
+    "spider_dev_idx": 950,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "List each owner's first name, last name, and the size of his for her dog.",
+    "sql": "SELECT T1.first_name ,  T1.last_name ,  T2.size_code FROM Owners AS T1 JOIN Dogs AS T2 ON T1.owner_id  =  T2.owner_id",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 65,
+    "spider_dev_idx": 915,
+    "db_id": "network_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/network_1/network_1.sqlite",
+    "question": "What is the average grade of students who have friends?",
+    "sql": "SELECT avg(grade) FROM Highschooler WHERE id IN (SELECT T1.student_id FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id)",
+    "schema": "CREATE TABLE Friend(\n\tstudent_id int, \n\tfriend_id int,\n\tprimary key (student_id,friend_id),\n\tforeign key(student_id) references Highschooler(ID),\n\tforeign key (friend_id) references Highschooler(ID)\n);\n\nCREATE TABLE Highschooler(\n\tID int primary key, \n\tname text, \n\tgrade int);\n\nCREATE TABLE Likes(\n\tstudent_id int, \n\tliked_id int,\n\tprimary key (student_id, liked_id),\n        foreign key (liked_id) references Highschooler(ID),\n        foreign key (student_id) references Highschooler(ID)\n);"
+  },
+  {
+    "eval_id": 66,
+    "spider_dev_idx": 983,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "Find the number of professionals who have not treated any dogs.",
+    "sql": "SELECT count(*) FROM Professionals WHERE professional_id NOT IN ( SELECT professional_id FROM Treatments )",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 67,
+    "spider_dev_idx": 297,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "How many documents do we have?",
+    "sql": "SELECT count(*) FROM Documents",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 68,
+    "spider_dev_idx": 525,
+    "db_id": "student_transcripts_tracking",
+    "db_path": "E:/Projects/SQL/data/spider_db/student_transcripts_tracking/student_transcripts_tracking.sqlite",
+    "question": "What are the names and id of courses having at most 2 sections?",
+    "sql": "SELECT T1.course_name ,  T1.course_id FROM Courses AS T1 JOIN Sections AS T2 ON T1.course_id  =  T2.course_id GROUP BY T1.course_id HAVING count(*)  <=  2",
+    "schema": "CREATE TABLE `Addresses` (\n`address_id` INTEGER PRIMARY KEY,\n`line_1` VARCHAR(255),\n`line_2` VARCHAR(255),\n`line_3` VARCHAR(255),\n`city` VARCHAR(255),\n`zip_postcode` VARCHAR(20),\n`state_province_county` VARCHAR(255),\n`country` VARCHAR(255),\n`other_address_details` VARCHAR(255)\n);\n\nCREATE TABLE `Courses` (\n`course_id` INTEGER PRIMARY KEY,\n`course_name` VARCHAR(255),\n`course_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Degree_Programs` (\n`degree_program_id` INTEGER PRIMARY KEY,\n`department_id` INTEGER NOT NULL,\n`degree_summary_name` VARCHAR(255),\n`degree_summary_description` VARCHAR(255),\n`other_details` VARCHAR(255),\nFOREIGN KEY (`department_id` ) REFERENCES `Departments`(`department_id` )\n);\n\nCREATE TABLE `Departments` (\n`department_id` INTEGER PRIMARY KEY,\n`department_name` VARCHAR(255),\n`department_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Sections` (\n`section_id` INTEGER PRIMARY KEY,\n`course_id` INTEGER NOT NULL,\n`section_name` VARCHAR(255),\n`section_description` VARCHAR(255),\n`other_details` VARCHAR(255),\nFOREIGN KEY (`course_id` ) REFERENCES `Courses`(`course_id` )\n);\n\nCREATE TABLE `Semesters` (\n`semester_id` INTEGER PRIMARY KEY,\n`semester_name` VARCHAR(255),\n`semester_description` VARCHAR(255),\n`other_details` VARCHAR(255)\n);\n\nCREATE TABLE `Student_Enrolment` (\n`student_enrolment_id` INTEGER PRIMARY KEY,\n`degree_program_id` INTEGER NOT NULL,\n`semester_id` INTEGER NOT NULL,\n`student_id` INTEGER NOT NULL,\n`other_details` VARCHAR(255),\nFOREIGN KEY (`degree_program_id` ) REFERENCES `Degree_Programs`(`degree_program_id` ),\nFOREIGN KEY (`semester_id` ) REFERENCES `Semesters`(`semester_id` ),\nFOREIGN KEY (`student_id` ) REFERENCES `Students`(`student_id` )\n);\n\nCREATE TABLE `Student_Enrolment_Courses` (\n`student_course_id` INTEGER PRIMARY KEY,\n`course_id` INTEGER NOT NULL,\n`student_enrolment_id` INTEGER NOT NULL,\nFOREIGN KEY (`course_id` ) REFERENCES `Courses`(`course_id` ),\nFOREIGN KEY (`student_enrolment_id` ) REFERENCES `Student_Enrolment`(`student_enrolment_id` )\n);\n\nCREATE TABLE `Students` (\n`student_id` INTEGER PRIMARY KEY,\n`current_address_id` INTEGER NOT NULL,\n`permanent_address_id` INTEGER NOT NULL,\n`first_name` VARCHAR(80),\n`middle_name` VARCHAR(40),\n`last_name` VARCHAR(40),\n`cell_mobile_number` VARCHAR(40),\n`email_address` VARCHAR(40),\n`ssn` VARCHAR(40),\n`date_first_registered` DATETIME,\n`date_left` DATETIME,\n`other_student_details` VARCHAR(255),\nFOREIGN KEY (`current_address_id` ) REFERENCES `Addresses`(`address_id` ),\nFOREIGN KEY (`permanent_address_id` ) REFERENCES `Addresses`(`address_id` )\n);\n\nCREATE TABLE `Transcript_Contents` (\n`student_course_id` INTEGER NOT NULL,\n`transcript_id` INTEGER NOT NULL,\nFOREIGN KEY (`student_course_id` ) REFERENCES `Student_Enrolment_Courses`(`student_course_id` ),\nFOREIGN KEY (`transcript_id` ) REFERENCES `Transcripts`(`transcript_id` )\n);\n\nCREATE TABLE `Transcripts` (\n`transcript_id` INTEGER PRIMARY KEY,\n`transcript_date` DATETIME,\n`other_details` VARCHAR(255)\n);"
+  },
+  {
+    "eval_id": 69,
+    "spider_dev_idx": 53,
+    "db_id": "pets_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/pets_1/pets_1.sqlite",
+    "question": "Find the number of dog pets that are raised by female students (with sex F).",
+    "sql": "SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T2.petid  =  T3.petid WHERE T1.sex  =  'F' AND T3.pettype  =  'dog'",
+    "schema": "CREATE TABLE Has_Pet (\n       StuID\t\tINTEGER,\n       PetID\t\tINTEGER,\n       FOREIGN KEY(PetID) REFERENCES Pets(PetID),\n       FOREIGN KEY(StuID) REFERENCES Student(StuID)\n);\n\nCREATE TABLE Pets (\n       PetID\t\tINTEGER PRIMARY KEY,\n       PetType\t\tVARCHAR(20),\n       pet_age INTEGER,\n       weight REAL\n);\n\nCREATE TABLE Student (\n       StuID    \tINTEGER PRIMARY KEY,\n       LName\t\tVARCHAR(12),\n       Fname\t\tVARCHAR(12),\n       Age\t\tINTEGER,\n       Sex\t\tVARCHAR(1),\n       Major\t\tINTEGER,\n       Advisor\t\tINTEGER,\n       city_code\tVARCHAR(3)\n);"
+  },
+  {
+    "eval_id": 70,
+    "spider_dev_idx": 272,
+    "db_id": "employee_hire_evaluation",
+    "db_path": "E:/Projects/SQL/data/spider_db/employee_hire_evaluation/employee_hire_evaluation.sqlite",
+    "question": "What are the minimum and maximum number of products across all the shops?",
+    "sql": "SELECT min(Number_products) ,  max(Number_products) FROM shop",
+    "schema": "CREATE TABLE \"employee\" (\n\"Employee_ID\" int,\n\"Name\" text,\n\"Age\" int,\n\"City\" text,\nPRIMARY KEY (\"Employee_ID\")\n);\n\nCREATE TABLE \"evaluation\" (\n\"Employee_ID\" text,\n\"Year_awarded\" text,\n\"Bonus\" real,\nPRIMARY KEY (\"Employee_ID\",\"Year_awarded\"),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"hiring\" (\n\"Shop_ID\" int,\n\"Employee_ID\" int,\n\"Start_from\" text,\n\"Is_full_time\" bool,\nPRIMARY KEY (\"Employee_ID\"),\nFOREIGN KEY (`Shop_ID`) REFERENCES `shop`(`Shop_ID`),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"shop\" (\n\"Shop_ID\" int,\n\"Name\" text,\n\"Location\" text,\n\"District\" text,\n\"Number_products\" int,\n\"Manager_name\" text,\nPRIMARY KEY (\"Shop_ID\")\n);"
+  },
+  {
+    "eval_id": 71,
+    "spider_dev_idx": 333,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "Show all template type codes with less than three templates.",
+    "sql": "SELECT template_type_code FROM Templates GROUP BY template_type_code HAVING count(*)  <  3",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 72,
+    "spider_dev_idx": 904,
+    "db_id": "network_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/network_1/network_1.sqlite",
+    "question": "Show the names of high schoolers who have likes, and numbers of likes for each.",
+    "sql": "SELECT T2.name ,  count(*) FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id",
+    "schema": "CREATE TABLE Friend(\n\tstudent_id int, \n\tfriend_id int,\n\tprimary key (student_id,friend_id),\n\tforeign key(student_id) references Highschooler(ID),\n\tforeign key (friend_id) references Highschooler(ID)\n);\n\nCREATE TABLE Highschooler(\n\tID int primary key, \n\tname text, \n\tgrade int);\n\nCREATE TABLE Likes(\n\tstudent_id int, \n\tliked_id int,\n\tprimary key (student_id, liked_id),\n        foreign key (liked_id) references Highschooler(ID),\n        foreign key (student_id) references Highschooler(ID)\n);"
+  },
+  {
+    "eval_id": 73,
+    "spider_dev_idx": 612,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "What is the title of all the cartools that are on the TV Channel with the series name \"Sky Radio\"?",
+    "sql": "SELECT T2.Title FROM TV_Channel AS T1 JOIN Cartoon AS T2 ON T1.id = T2.Channel WHERE T1.series_name = \"Sky Radio\";",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 74,
+    "spider_dev_idx": 755,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "Which countries have either English or Dutch as an official language?",
+    "sql": "SELECT * FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"English\" AND IsOfficial  =  \"T\" UNION SELECT * FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"Dutch\" AND IsOfficial  =  \"T\"",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 75,
+    "spider_dev_idx": 397,
+    "db_id": "course_teach",
+    "db_path": "E:/Projects/SQL/data/spider_db/course_teach/course_teach.sqlite",
+    "question": "Show the hometowns shared by at least two teachers.",
+    "sql": "SELECT Hometown FROM teacher GROUP BY Hometown HAVING COUNT(*)  >=  2",
+    "schema": "CREATE TABLE \"course\" (\n\"Course_ID\" int,\n\"Staring_Date\" text,\n\"Course\" text,\nPRIMARY KEY (\"Course_ID\")\n);\n\nCREATE TABLE \"course_arrange\" (\n\"Course_ID\" int,\n\"Teacher_ID\" int,\n\"Grade\" int,\nPRIMARY KEY (\"Course_ID\",\"Teacher_ID\",\"Grade\"),\nFOREIGN KEY (\"Course_ID\") REFERENCES `course`(\"Course_ID\"),\nFOREIGN KEY (\"Teacher_ID\") REFERENCES `teacher`(\"Teacher_ID\")\n);\n\nCREATE TABLE \"teacher\" (\n\"Teacher_ID\" int,\n\"Name\" text,\n\"Age\" text,\n\"Hometown\" text,\nPRIMARY KEY (\"Teacher_ID\")\n);"
+  },
+  {
+    "eval_id": 76,
+    "spider_dev_idx": 325,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "How many templates have template type code CV?",
+    "sql": "SELECT count(*) FROM Templates WHERE template_type_code  =  \"CV\"",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 77,
+    "spider_dev_idx": 480,
+    "db_id": "wta_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/wta_1/wta_1.sqlite",
+    "question": "How many total tours were there for each ranking date?",
+    "sql": "SELECT sum(tours) ,  ranking_date FROM rankings GROUP BY ranking_date",
+    "schema": "CREATE TABLE matches(\n  \"best_of\" INT,\n  \"draw_size\" INT,\n  \"loser_age\" FLOAT,\n  \"loser_entry\" TEXT,\n  \"loser_hand\" TEXT,\n  \"loser_ht\" INT,\n  \"loser_id\" INT,\n  \"loser_ioc\" TEXT,\n  \"loser_name\" TEXT,\n  \"loser_rank\" INT,\n  \"loser_rank_points\" INT,\n  \"loser_seed\" INT,\n  \"match_num\" INT,\n  \"minutes\" INT,\n  \"round\" TEXT,\n  \"score\" TEXT,\n  \"surface\" TEXT,\n  \"tourney_date\" DATE,\n  \"tourney_id\" TEXT,\n  \"tourney_level\" TEXT,\n  \"tourney_name\" TEXT,\n  \"winner_age\" FLOAT,\n  \"winner_entry\" TEXT,\n  \"winner_hand\" TEXT,\n  \"winner_ht\" INT,\n  \"winner_id\" INT,\n  \"winner_ioc\" TEXT,\n  \"winner_name\" TEXT,\n  \"winner_rank\" INT,\n  \"winner_rank_points\" INT,\n  \"winner_seed\" INT,\n  \"year\" INT,\n  FOREIGN KEY(loser_id) REFERENCES players(player_id),\n  FOREIGN KEY(winner_id) REFERENCES players(player_id)\n);\n\nCREATE TABLE players(\n    \"player_id\" INT PRIMARY KEY,\n    \"first_name\" TEXT,\n    \"last_name\" TEXT,\n    \"hand\" TEXT,\n    \"birth_date\" DATE,\n    \"country_code\" TEXT\n);\n\nCREATE TABLE rankings(\"ranking_date\" DATE,\"ranking\" INT,\"player_id\" INT,\"ranking_points\" INT,\"tours\" INT,FOREIGN KEY(player_id) REFERENCES players(player_id));"
+  },
+  {
+    "eval_id": 78,
+    "spider_dev_idx": 716,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "What are the region and population of Angola?",
+    "sql": "SELECT Population ,  Region FROM country WHERE Name  =  \"Angola\"",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 79,
+    "spider_dev_idx": 318,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "Count the number of templates.",
+    "sql": "SELECT count(*) FROM Templates",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 80,
+    "spider_dev_idx": 702,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "What are the names of all the countries that became independent after 1950?",
+    "sql": "SELECT Name FROM country WHERE IndepYear  >  1950",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 81,
+    "spider_dev_idx": 672,
+    "db_id": "poker_player",
+    "db_path": "E:/Projects/SQL/data/spider_db/poker_player/poker_player.sqlite",
+    "question": "Return the names of poker players sorted by their earnings descending.",
+    "sql": "SELECT T1.Name FROM people AS T1 JOIN poker_player AS T2 ON T1.People_ID  =  T2.People_ID ORDER BY T2.Earnings DESC",
+    "schema": "CREATE TABLE \"people\" (\n\"People_ID\" int,\n\"Nationality\" text,\n\"Name\" text,\n\"Birth_Date\" text,\n\"Height\" real,\nPRIMARY KEY (\"People_ID\")\n);\n\nCREATE TABLE \"poker_player\" (\n\"Poker_Player_ID\" int,\n\"People_ID\" int,\n\"Final_Table_Made\" real,\n\"Best_Finish\" real,\n\"Money_Rank\" real,\n\"Earnings\" real,\nPRIMARY KEY (\"Poker_Player_ID\"),\nFOREIGN KEY (\"People_ID\") REFERENCES `people`(\"People_ID\")\n);"
+  },
+  {
+    "eval_id": 82,
+    "spider_dev_idx": 819,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "Count the number of countries for which Spanish is the predominantly spoken language.",
+    "sql": "SELECT count(*) ,   max(Percentage) FROM countrylanguage WHERE LANGUAGE  =  \"Spanish\" GROUP BY CountryCode",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  },
+  {
+    "eval_id": 83,
+    "spider_dev_idx": 449,
+    "db_id": "wta_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/wta_1/wta_1.sqlite",
+    "question": "List the number of all matches who played in years of 2013 or 2016.",
+    "sql": "SELECT count(*) FROM matches WHERE YEAR  =  2013 OR YEAR  =  2016",
+    "schema": "CREATE TABLE matches(\n  \"best_of\" INT,\n  \"draw_size\" INT,\n  \"loser_age\" FLOAT,\n  \"loser_entry\" TEXT,\n  \"loser_hand\" TEXT,\n  \"loser_ht\" INT,\n  \"loser_id\" INT,\n  \"loser_ioc\" TEXT,\n  \"loser_name\" TEXT,\n  \"loser_rank\" INT,\n  \"loser_rank_points\" INT,\n  \"loser_seed\" INT,\n  \"match_num\" INT,\n  \"minutes\" INT,\n  \"round\" TEXT,\n  \"score\" TEXT,\n  \"surface\" TEXT,\n  \"tourney_date\" DATE,\n  \"tourney_id\" TEXT,\n  \"tourney_level\" TEXT,\n  \"tourney_name\" TEXT,\n  \"winner_age\" FLOAT,\n  \"winner_entry\" TEXT,\n  \"winner_hand\" TEXT,\n  \"winner_ht\" INT,\n  \"winner_id\" INT,\n  \"winner_ioc\" TEXT,\n  \"winner_name\" TEXT,\n  \"winner_rank\" INT,\n  \"winner_rank_points\" INT,\n  \"winner_seed\" INT,\n  \"year\" INT,\n  FOREIGN KEY(loser_id) REFERENCES players(player_id),\n  FOREIGN KEY(winner_id) REFERENCES players(player_id)\n);\n\nCREATE TABLE players(\n    \"player_id\" INT PRIMARY KEY,\n    \"first_name\" TEXT,\n    \"last_name\" TEXT,\n    \"hand\" TEXT,\n    \"birth_date\" DATE,\n    \"country_code\" TEXT\n);\n\nCREATE TABLE rankings(\"ranking_date\" DATE,\"ranking\" INT,\"player_id\" INT,\"ranking_points\" INT,\"tours\" INT,FOREIGN KEY(player_id) REFERENCES players(player_id));"
+  },
+  {
+    "eval_id": 84,
+    "spider_dev_idx": 978,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "How many dogs have not gone through any treatment?",
+    "sql": "SELECT count(*) FROM Dogs WHERE dog_id NOT IN ( SELECT dog_id FROM Treatments )",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 85,
+    "spider_dev_idx": 636,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "What are the countries that are not playing cartoons written by Todd Casey?",
+    "sql": "SELECT country FROM TV_Channel EXCEPT SELECT T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.written_by  =  'Todd Casey'",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 86,
+    "spider_dev_idx": 247,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "What are flight numbers of flights departing from Airport \"APG\"?",
+    "sql": "SELECT FlightNo FROM FLIGHTS WHERE SourceAirport  =  \"APG\"",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 87,
+    "spider_dev_idx": 150,
+    "db_id": "car_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/car_1/car_1.sqlite",
+    "question": "What are the names and ids of all makers with more than 3 models?",
+    "sql": "SELECT T1.FullName ,  T1.Id FROM CAR_MAKERS AS T1 JOIN MODEL_LIST AS T2 ON T1.Id  =  T2.Maker GROUP BY T1.Id HAVING count(*)  >  3;",
+    "schema": "CREATE TABLE \"car_makers\" ( \n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"Maker\" TEXT, \n\t\"FullName\" TEXT, \n\t\"Country\" TEXT,\n\tFOREIGN KEY (Country) REFERENCES countries(CountryId)\n);\n\nCREATE TABLE \"car_names\" ( \n\t\"MakeId\" INTEGER PRIMARY KEY, \n\t\"Model\" TEXT, \n\t\"Make\" TEXT,\n\tFOREIGN KEY (Model) REFERENCES model_list (Model)\n);\n\nCREATE TABLE \"cars_data\" (\n\t\"Id\" INTEGER PRIMARY KEY, \n\t\"MPG\" TEXT, \n\t\"Cylinders\" INTEGER, \n\t\"Edispl\" REAL, \n\t\"Horsepower\" TEXT, \n\t\"Weight\" INTEGER, \n\t\"Accelerate\" REAL, \n\t\"Year\" INTEGER,\n\tFOREIGN KEY (Id) REFERENCES car_names (MakeId)\n);\n\nCREATE TABLE \"continents\" ( \n\t\"ContId\" INTEGER PRIMARY KEY, \n\t\"Continent\" TEXT \n);\n\nCREATE TABLE \"countries\" (\n\t\"CountryId\" INTEGER PRIMARY KEY, \n\t\"CountryName\" TEXT, \n\t\"Continent\" INTEGER,\n\tFOREIGN KEY (Continent) REFERENCES continents(ContId)\n);\n\nCREATE TABLE \"model_list\" ( \n\t\"ModelId\" INTEGER PRIMARY KEY, \n\t\"Maker\" INTEGER, \n\t\"Model\" TEXT UNIQUE,\n\tFOREIGN KEY (Maker) REFERENCES car_makers (Id)\n\n);"
+  },
+  {
+    "eval_id": 88,
+    "spider_dev_idx": 697,
+    "db_id": "voter_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/voter_1/voter_1.sqlite",
+    "question": "How many contestants did not get voted?",
+    "sql": "SELECT count(*) FROM contestants WHERE contestant_number NOT IN ( SELECT contestant_number FROM votes )",
+    "schema": "CREATE TABLE `AREA_CODE_STATE` (\n  `area_code` integer NOT NULL\n,  `state` varchar(2) NOT NULL\n,  PRIMARY KEY (`area_code`)\n);\n\nCREATE TABLE `CONTESTANTS` (\n  `contestant_number` integer\n,  `contestant_name` varchar(50) NOT NULL\n,  PRIMARY KEY (`contestant_number`)\n);\n\nCREATE TABLE `VOTES` (\n  `vote_id` integer NOT NULL PRIMARY KEY\n,  `phone_number` integer NOT NULL\n,  `state` varchar(2) NOT NULL\n,  `contestant_number` integer NOT NULL\n,  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP\n, \tFOREIGN KEY (`state`) REFERENCES `AREA_CODE_STATE`(`state`)\n, \tFOREIGN KEY (`contestant_number`) REFERENCES `CONTESTANTS`(`contestant_number`)\n);"
+  },
+  {
+    "eval_id": 89,
+    "spider_dev_idx": 628,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "How many cartoons did each director create?",
+    "sql": "SELECT count(*) ,  Directed_by FROM cartoon GROUP BY Directed_by",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 90,
+    "spider_dev_idx": 385,
+    "db_id": "course_teach",
+    "db_path": "E:/Projects/SQL/data/spider_db/course_teach/course_teach.sqlite",
+    "question": "What are the age and hometown of teachers?",
+    "sql": "SELECT Age ,  Hometown FROM teacher",
+    "schema": "CREATE TABLE \"course\" (\n\"Course_ID\" int,\n\"Staring_Date\" text,\n\"Course\" text,\nPRIMARY KEY (\"Course_ID\")\n);\n\nCREATE TABLE \"course_arrange\" (\n\"Course_ID\" int,\n\"Teacher_ID\" int,\n\"Grade\" int,\nPRIMARY KEY (\"Course_ID\",\"Teacher_ID\",\"Grade\"),\nFOREIGN KEY (\"Course_ID\") REFERENCES `course`(\"Course_ID\"),\nFOREIGN KEY (\"Teacher_ID\") REFERENCES `teacher`(\"Teacher_ID\")\n);\n\nCREATE TABLE \"teacher\" (\n\"Teacher_ID\" int,\n\"Name\" text,\n\"Age\" text,\n\"Hometown\" text,\nPRIMARY KEY (\"Teacher_ID\")\n);"
+  },
+  {
+    "eval_id": 91,
+    "spider_dev_idx": 694,
+    "db_id": "voter_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/voter_1/voter_1.sqlite",
+    "question": "What are the contestant numbers and names of the contestants who had at least two votes?",
+    "sql": "SELECT T1.contestant_number , T1.contestant_name FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number GROUP BY T1.contestant_number HAVING count(*)  >=  2",
+    "schema": "CREATE TABLE `AREA_CODE_STATE` (\n  `area_code` integer NOT NULL\n,  `state` varchar(2) NOT NULL\n,  PRIMARY KEY (`area_code`)\n);\n\nCREATE TABLE `CONTESTANTS` (\n  `contestant_number` integer\n,  `contestant_name` varchar(50) NOT NULL\n,  PRIMARY KEY (`contestant_number`)\n);\n\nCREATE TABLE `VOTES` (\n  `vote_id` integer NOT NULL PRIMARY KEY\n,  `phone_number` integer NOT NULL\n,  `state` varchar(2) NOT NULL\n,  `contestant_number` integer NOT NULL\n,  `created` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP\n, \tFOREIGN KEY (`state`) REFERENCES `AREA_CODE_STATE`(`state`)\n, \tFOREIGN KEY (`contestant_number`) REFERENCES `CONTESTANTS`(`contestant_number`)\n);"
+  },
+  {
+    "eval_id": 92,
+    "spider_dev_idx": 221,
+    "db_id": "flight_2",
+    "db_path": "E:/Projects/SQL/data/spider_db/flight_2/flight_2.sqlite",
+    "question": "Which city has most number of arriving flights?",
+    "sql": "SELECT T1.City FROM AIRPORTS AS T1 JOIN FLIGHTS AS T2 ON T1.AirportCode  =  T2.DestAirport GROUP BY T1.City ORDER BY count(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE 'airlines' (\n\tuid INTEGER PRIMARY KEY, \n\tAirline TEXT, \n\tAbbreviation TEXT, \n\tCountry TEXT\n);\n\nCREATE TABLE 'airports' (\n\tCity TEXT, \n\tAirportCode TEXT PRIMARY KEY, \n\tAirportName TEXT, \n\tCountry TEXT, \n\tCountryAbbrev TEXT\n);\n\nCREATE TABLE 'flights' (\n\tAirline INTEGER, \n\tFlightNo INTEGER, \n\tSourceAirport TEXT, \n\tDestAirport TEXT, \n\tPRIMARY KEY(Airline, FlightNo),\n\tFOREIGN KEY (SourceAirport) REFERENCES airports(AirportCode),\n\tFOREIGN KEY (DestAirport) REFERENCES airports(AirportCode)\n);"
+  },
+  {
+    "eval_id": 93,
+    "spider_dev_idx": 935,
+    "db_id": "dog_kennels",
+    "db_path": "E:/Projects/SQL/data/spider_db/dog_kennels/dog_kennels.sqlite",
+    "question": "Which breed do the most dogs have? Give me the breed name.",
+    "sql": "SELECT T1.breed_name FROM Breeds AS T1 JOIN Dogs AS T2 ON T1.breed_code  =  T2.breed_code GROUP BY T1.breed_name ORDER BY count(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE `Breeds` (\n`breed_code` VARCHAR(10) PRIMARY KEY ,\n`breed_name` VARCHAR(80)\n);\n\nCREATE TABLE `Charges` (\n`charge_id` INTEGER PRIMARY KEY ,\n`charge_type` VARCHAR(10),\n`charge_amount` DECIMAL(19,4)\n);\n\nCREATE TABLE `Dogs` (\n`dog_id` INTEGER PRIMARY KEY ,\n`owner_id` INTEGER NOT NULL,\n`abandoned_yn` VARCHAR(1),\n`breed_code` VARCHAR(10) NOT NULL,\n`size_code` VARCHAR(10) NOT NULL,\n`name` VARCHAR(50),\n`age` VARCHAR(20),\n`date_of_birth` DATETIME,\n`gender` VARCHAR(1),\n`weight` VARCHAR(20),\n`date_arrived` DATETIME,\n`date_adopted` DATETIME,\n`date_departed` DATETIME,\nFOREIGN KEY (`breed_code` ) REFERENCES `Breeds`(`breed_code` ),\nFOREIGN KEY (`size_code` ) REFERENCES `Sizes`(`size_code` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` ),\nFOREIGN KEY (`owner_id` ) REFERENCES `Owners`(`owner_id` )\n);\n\nCREATE TABLE `Owners` (\n`owner_id` INTEGER PRIMARY KEY ,\n`first_name` VARCHAR(50),\n`last_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Professionals` (\n`professional_id` INTEGER PRIMARY KEY ,\n`role_code` VARCHAR(10) NOT NULL,\n`first_name` VARCHAR(50),\n`street` VARCHAR(50),\n`city` VARCHAR(50),\n`state` VARCHAR(20),\n`zip_code` VARCHAR(20),\n`last_name` VARCHAR(50),\n`email_address` VARCHAR(50),\n`home_phone` VARCHAR(20),\n`cell_number` VARCHAR(20)\n);\n\nCREATE TABLE `Sizes` (\n`size_code` VARCHAR(10) PRIMARY KEY ,\n`size_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatment_Types` (\n`treatment_type_code` VARCHAR(10) PRIMARY KEY ,\n`treatment_type_description` VARCHAR(80)\n);\n\nCREATE TABLE `Treatments` (\n`treatment_id` INTEGER PRIMARY KEY ,\n`dog_id` INTEGER NOT NULL,\n`professional_id` INTEGER NOT NULL,\n`treatment_type_code` VARCHAR(10) NOT NULL,\n`date_of_treatment` DATETIME,\n`cost_of_treatment` DECIMAL(19,4),\nFOREIGN KEY (`treatment_type_code` ) REFERENCES `Treatment_Types`(`treatment_type_code` ),\nFOREIGN KEY (`professional_id` ) REFERENCES `Professionals`(`professional_id` ),\nFOREIGN KEY (`dog_id` ) REFERENCES `Dogs`(`dog_id` )\n);"
+  },
+  {
+    "eval_id": 94,
+    "spider_dev_idx": 262,
+    "db_id": "employee_hire_evaluation",
+    "db_path": "E:/Projects/SQL/data/spider_db/employee_hire_evaluation/employee_hire_evaluation.sqlite",
+    "question": "List the names of employees and sort in ascending order of age.",
+    "sql": "SELECT name FROM employee ORDER BY age",
+    "schema": "CREATE TABLE \"employee\" (\n\"Employee_ID\" int,\n\"Name\" text,\n\"Age\" int,\n\"City\" text,\nPRIMARY KEY (\"Employee_ID\")\n);\n\nCREATE TABLE \"evaluation\" (\n\"Employee_ID\" text,\n\"Year_awarded\" text,\n\"Bonus\" real,\nPRIMARY KEY (\"Employee_ID\",\"Year_awarded\"),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"hiring\" (\n\"Shop_ID\" int,\n\"Employee_ID\" int,\n\"Start_from\" text,\n\"Is_full_time\" bool,\nPRIMARY KEY (\"Employee_ID\"),\nFOREIGN KEY (`Shop_ID`) REFERENCES `shop`(`Shop_ID`),\nFOREIGN KEY (`Employee_ID`) REFERENCES `employee`(`Employee_ID`)\n);\n\nCREATE TABLE \"shop\" (\n\"Shop_ID\" int,\n\"Name\" text,\n\"Location\" text,\n\"District\" text,\n\"Number_products\" int,\n\"Manager_name\" text,\nPRIMARY KEY (\"Shop_ID\")\n);"
+  },
+  {
+    "eval_id": 95,
+    "spider_dev_idx": 329,
+    "db_id": "cre_Doc_Template_Mgt",
+    "db_path": "E:/Projects/SQL/data/spider_db/cre_Doc_Template_Mgt/cre_Doc_Template_Mgt.sqlite",
+    "question": "Show all template type codes and number of templates for each.",
+    "sql": "SELECT template_type_code ,  count(*) FROM Templates GROUP BY template_type_code",
+    "schema": "CREATE TABLE Documents (\nDocument_ID INTEGER NOT NULL,\nTemplate_ID INTEGER,\nDocument_Name VARCHAR(255),\nDocument_Description VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Document_ID),\nFOREIGN KEY (Template_ID) REFERENCES Templates (Template_ID)\n);\n\nCREATE TABLE Paragraphs (\nParagraph_ID INTEGER NOT NULL,\nDocument_ID INTEGER NOT NULL,\nParagraph_Text VARCHAR(255),\nOther_Details VARCHAR(255),\nPRIMARY KEY (Paragraph_ID),\nFOREIGN KEY (Document_ID) REFERENCES Documents (Document_ID)\n);\n\nCREATE TABLE Ref_Template_Types (\nTemplate_Type_Code CHAR(15) NOT NULL,\nTemplate_Type_Description VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_Type_Code)\n);\n\nCREATE TABLE Templates (\nTemplate_ID INTEGER NOT NULL,\nVersion_Number INTEGER NOT NULL,\nTemplate_Type_Code CHAR(15) NOT NULL,\nDate_Effective_From DATETIME,\nDate_Effective_To DATETIME,\nTemplate_Details VARCHAR(255) NOT NULL,\nPRIMARY KEY (Template_ID),\nFOREIGN KEY (Template_Type_Code) REFERENCES Ref_Template_Types (Template_Type_Code)\n);"
+  },
+  {
+    "eval_id": 96,
+    "spider_dev_idx": 648,
+    "db_id": "poker_player",
+    "db_path": "E:/Projects/SQL/data/spider_db/poker_player/poker_player.sqlite",
+    "question": "Count the number of poker players.",
+    "sql": "SELECT count(*) FROM poker_player",
+    "schema": "CREATE TABLE \"people\" (\n\"People_ID\" int,\n\"Nationality\" text,\n\"Name\" text,\n\"Birth_Date\" text,\n\"Height\" real,\nPRIMARY KEY (\"People_ID\")\n);\n\nCREATE TABLE \"poker_player\" (\n\"Poker_Player_ID\" int,\n\"People_ID\" int,\n\"Final_Table_Made\" real,\n\"Best_Finish\" real,\n\"Money_Rank\" real,\n\"Earnings\" real,\nPRIMARY KEY (\"Poker_Player_ID\"),\nFOREIGN KEY (\"People_ID\") REFERENCES `people`(\"People_ID\")\n);"
+  },
+  {
+    "eval_id": 97,
+    "spider_dev_idx": 639,
+    "db_id": "tvshow",
+    "db_path": "E:/Projects/SQL/data/spider_db/tvshow/tvshow.sqlite",
+    "question": "find the pixel aspect ratio and nation of the tv channels that do not use English.",
+    "sql": "SELECT Pixel_aspect_ratio_PAR ,  country FROM tv_channel WHERE LANGUAGE != 'English'",
+    "schema": "CREATE TABLE \"Cartoon\" (\n\"id\" real,\n\"Title\" text,\n\"Directed_by\" text,\n\"Written_by\" text,\n\"Original_air_date\" text,\n\"Production_code\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);\n\nCREATE TABLE \"TV_Channel\" (\n\"id\" text,\n\"series_name\" text,\n\"Country\" text,\n\"Language\" text,\n\"Content\" text,\n\"Pixel_aspect_ratio_PAR\" text,\n\"Hight_definition_TV\" text,\n\"Pay_per_view_PPV\" text,\n\"Package_Option\" text,\nPRIMARY KEY (\"id\")\n);\n\nCREATE TABLE \"TV_series\" (\n\"id\" real,\n\"Episode\" text,\n\"Air_Date\" text,\n\"Rating\" text,\n\"Share\" real,\n\"18_49_Rating_Share\" text,\n\"Viewers_m\" text,\n\"Weekly_Rank\" real,\n\"Channel\" text,\nPRIMARY KEY (\"id\"),\nFOREIGN KEY (`Channel`) REFERENCES `TV_Channel`(`id`)\n);"
+  },
+  {
+    "eval_id": 98,
+    "spider_dev_idx": 676,
+    "db_id": "poker_player",
+    "db_path": "E:/Projects/SQL/data/spider_db/poker_player/poker_player.sqlite",
+    "question": "Give the nationality that is most common across all people.",
+    "sql": "SELECT Nationality FROM people GROUP BY Nationality ORDER BY COUNT(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE \"people\" (\n\"People_ID\" int,\n\"Nationality\" text,\n\"Name\" text,\n\"Birth_Date\" text,\n\"Height\" real,\nPRIMARY KEY (\"People_ID\")\n);\n\nCREATE TABLE \"poker_player\" (\n\"Poker_Player_ID\" int,\n\"People_ID\" int,\n\"Final_Table_Made\" real,\n\"Best_Finish\" real,\n\"Money_Rank\" real,\n\"Earnings\" real,\nPRIMARY KEY (\"Poker_Player_ID\"),\nFOREIGN KEY (\"People_ID\") REFERENCES `people`(\"People_ID\")\n);"
+  },
+  {
+    "eval_id": 99,
+    "spider_dev_idx": 463,
+    "db_id": "wta_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/wta_1/wta_1.sqlite",
+    "question": "Find the name and rank points of the winner who won the most times.",
+    "sql": "SELECT winner_name ,  winner_rank_points FROM matches GROUP BY winner_name ORDER BY count(*) DESC LIMIT 1",
+    "schema": "CREATE TABLE matches(\n  \"best_of\" INT,\n  \"draw_size\" INT,\n  \"loser_age\" FLOAT,\n  \"loser_entry\" TEXT,\n  \"loser_hand\" TEXT,\n  \"loser_ht\" INT,\n  \"loser_id\" INT,\n  \"loser_ioc\" TEXT,\n  \"loser_name\" TEXT,\n  \"loser_rank\" INT,\n  \"loser_rank_points\" INT,\n  \"loser_seed\" INT,\n  \"match_num\" INT,\n  \"minutes\" INT,\n  \"round\" TEXT,\n  \"score\" TEXT,\n  \"surface\" TEXT,\n  \"tourney_date\" DATE,\n  \"tourney_id\" TEXT,\n  \"tourney_level\" TEXT,\n  \"tourney_name\" TEXT,\n  \"winner_age\" FLOAT,\n  \"winner_entry\" TEXT,\n  \"winner_hand\" TEXT,\n  \"winner_ht\" INT,\n  \"winner_id\" INT,\n  \"winner_ioc\" TEXT,\n  \"winner_name\" TEXT,\n  \"winner_rank\" INT,\n  \"winner_rank_points\" INT,\n  \"winner_seed\" INT,\n  \"year\" INT,\n  FOREIGN KEY(loser_id) REFERENCES players(player_id),\n  FOREIGN KEY(winner_id) REFERENCES players(player_id)\n);\n\nCREATE TABLE players(\n    \"player_id\" INT PRIMARY KEY,\n    \"first_name\" TEXT,\n    \"last_name\" TEXT,\n    \"hand\" TEXT,\n    \"birth_date\" DATE,\n    \"country_code\" TEXT\n);\n\nCREATE TABLE rankings(\"ranking_date\" DATE,\"ranking\" INT,\"player_id\" INT,\"ranking_points\" INT,\"tours\" INT,FOREIGN KEY(player_id) REFERENCES players(player_id));"
+  },
+  {
+    "eval_id": 100,
+    "spider_dev_idx": 813,
+    "db_id": "world_1",
+    "db_path": "E:/Projects/SQL/data/spider_db/world_1/world_1.sqlite",
+    "question": "Return the names of cities that have a population between 160000 and 900000 .",
+    "sql": "select name from city where population between 160000 and 900000",
+    "schema": "CREATE TABLE `city` (\n  `ID` integer NOT NULL PRIMARY KEY AUTOINCREMENT\n,  `Name` char(35) NOT NULL DEFAULT ''\n,  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `District` char(20) NOT NULL DEFAULT ''\n,  `Population` integer NOT NULL DEFAULT '0'\n,  CONSTRAINT `city_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);\n\nCREATE TABLE `country` (\n  `Code` char(3) NOT NULL DEFAULT ''\n,  `Name` char(52) NOT NULL DEFAULT ''\n,  `Continent` text  NOT NULL DEFAULT 'Asia'\n,  `Region` char(26) NOT NULL DEFAULT ''\n,  `SurfaceArea` float(10,2) NOT NULL DEFAULT '0.00'\n,  `IndepYear` integer DEFAULT NULL\n,  `Population` integer NOT NULL DEFAULT '0'\n,  `LifeExpectancy` float(3,1) DEFAULT NULL\n,  `GNP` float(10,2) DEFAULT NULL\n,  `GNPOld` float(10,2) DEFAULT NULL\n,  `LocalName` char(45) NOT NULL DEFAULT ''\n,  `GovernmentForm` char(45) NOT NULL DEFAULT ''\n,  `HeadOfState` char(60) DEFAULT NULL\n,  `Capital` integer DEFAULT NULL\n,  `Code2` char(2) NOT NULL DEFAULT ''\n,  PRIMARY KEY (`Code`)\n);\n\nCREATE TABLE `countrylanguage` (\n  `CountryCode` char(3) NOT NULL DEFAULT ''\n,  `Language` char(30) NOT NULL DEFAULT ''\n,  `IsOfficial` text  NOT NULL DEFAULT 'F'\n,  `Percentage` float(4,1) NOT NULL DEFAULT '0.0'\n,  PRIMARY KEY (`CountryCode`,`Language`)\n,  CONSTRAINT `countryLanguage_ibfk_1` FOREIGN KEY (`CountryCode`) REFERENCES `country` (`Code`)\n);"
+  }
+]
