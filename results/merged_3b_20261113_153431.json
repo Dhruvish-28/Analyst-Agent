@@ -1,0 +1,12 @@
+{
+  "config_name": "merged_3b",
+  "base_model": "output/merged_model",
+  "adapter_path": null,
+  "timestamp": "2026-11-13T15:34:31.133616",
+  "total_questions": 100,
+  "execution_accuracy_pct": 63.0,
+  "valid_sql_rate_pct": 93.0,
+  "avg_seconds_per_question": 1.566,
+  "json_file": "results\\merged_3b_20261113_153431.json",
+  "csv_file": "results\\merged_3b_20261113_153431.csv"
+}

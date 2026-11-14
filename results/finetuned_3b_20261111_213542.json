@@ -1,0 +1,12 @@
+{
+  "config_name": "finetuned_3b",
+  "base_model": "Qwen/Qwen2.5-Coder-3B-Instruct",
+  "adapter_path": "output/final_adapter",
+  "timestamp": "2026-11-11T21:35:42.730315",
+  "total_questions": 100,
+  "execution_accuracy_pct": 59.0,
+  "valid_sql_rate_pct": 95.0,
+  "avg_seconds_per_question": 5.51,
+  "json_file": "results\\finetuned_3b_20261111_213542.json",
+  "csv_file": "results\\finetuned_3b_20261111_213542.csv"
+}

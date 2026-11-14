@@ -1,0 +1,187 @@
+eval_id,db_id,question,gold_sql,predicted_sql,execution_match,valid_sql,error_message,latency_sec
+1,cre_Doc_Template_Mgt,What is the document name and template id for document with description with the letter 'w' in it?,"SELECT document_name ,  template_id FROM Documents WHERE Document_Description LIKE ""%w%""","SELECT T1.Document_Name, T1.Template_ID
+FROM Documents AS T1
+JOIN Templates AS T2 ON T1.Template_ID = T2.Template_ID
+WHERE T1.Document_Description LIKE '%w%'",True,True,,2.839
+2,world_1,Which language is the most popular on the Asian continent?,"SELECT T2.Language FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T1.Continent  =  ""Asia"" GROUP BY T2.Language ORDER BY COUNT (*) DESC LIMIT 1",SELECT T2.Language FROM country AS T1 INNER JOIN countrylanguage AS T2 ON T1.Code = T2.CountryCode WHERE T1.Continent = 'Asia' GROUP BY T2.Language ORDER BY SUM(T2.Percentage) DESC LIMIT 1;,True,True,,3.178
+3,dog_kennels,Find the states where both owners and professionals live.,SELECT state FROM Owners INTERSECT SELECT state FROM Professionals,SELECT DISTINCT T1.state FROM Owners AS T1 INNER JOIN Professionals AS T2 ON T1.owner_id = T2.owner_id,False,False,Runtime Error: no such column: T2.owner_id,1.909
+4,flight_2,Return the number of flights.,SELECT count(*) FROM FLIGHTS,SELECT COUNT(*) FROM flights;,True,True,,0.641
+5,world_1,Which language is spoken by the largest number of countries?,SELECT LANGUAGE FROM countrylanguage GROUP BY LANGUAGE ORDER BY count(*) DESC LIMIT 1,SELECT T2.Language FROM countrylanguage AS T1 INNER JOIN country AS T2 ON T1.CountryCode = T2.Code GROUP BY T2.Language ORDER BY COUNT(*) DESC LIMIT 1;,False,False,Runtime Error: no such column: T2.Language,2.364
+6,singer,What are the names of the singers who are not French citizens?,"SELECT Name FROM singer WHERE Citizenship != ""France""",SELECT Name FROM singer WHERE Citizenship != 'French';,False,True,,0.767
+7,flight_2,Find the abbreviation and country of the airline that has fewest number of flights?,"SELECT T1.Abbreviation ,  T1.Country FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) LIMIT 1","SELECT T1.Abbreviation, T1.Country
+FROM airlines AS T1
+JOIN (
+    SELECT Airline, COUNT(*) as FlightCount
+    FROM flights
+    GROUP BY Airline
+) AS T2 ON T1.uid = T2.Airline
+ORDER BY T2.FlightCount ASC
+LIMIT 1;",False,True,,3.823
+8,tvshow,List top 3 highest Rating  TV series. List the TV series's Episode and Rating.,"SELECT Episode ,  Rating FROM TV_series ORDER BY Rating DESC LIMIT 3;","SELECT Episode, Rating FROM TV_series ORDER BY Rating DESC LIMIT 3;",True,True,,1.087
+9,car_1,How many car makers are there in france?,SELECT count(*) FROM CAR_MAKERS AS T1 JOIN COUNTRIES AS T2 ON T1.Country  =  T2.CountryId WHERE T2.CountryName  =  'france';,SELECT COUNT(*) FROM car_makers WHERE Country = 'France';,False,True,,1.005
+10,flight_2,What are the airline names and abbreviations for airlines in the USA?,"SELECT Airline ,  Abbreviation FROM AIRLINES WHERE Country  =  ""USA""","SELECT A.Airline, A.Abbreviation FROM airlines AS A JOIN airports AS T2 ON A.uid = T2.Airline WHERE T2.Country = 'USA';",False,False,Runtime Error: no such column: T2.Airline,2.183
+11,cre_Doc_Template_Mgt,What is the id and type code for the template used by the most documents?,"SELECT T1.template_id ,  T2.Template_Type_Code FROM Documents AS T1 JOIN Templates AS T2 ON T1.template_id  =  T2.template_id GROUP BY T1.template_id ORDER BY count(*) DESC LIMIT 1","SELECT T2.Template_ID, T2.Template_Type_Code
+FROM Documents AS T1
+JOIN Templates AS T2 ON T1.Template_ID = T2.Template_ID
+GROUP BY T2.Template_ID, T2.Template_Type_Code
+ORDER BY COUNT(T1.Document_ID) DESC
+LIMIT 1;",False,True,,3.431
+12,cre_Doc_Template_Mgt,What is the version number and template type code for the template with version number later than 5?,"SELECT version_number ,  template_type_code FROM Templates WHERE version_number  >  5","SELECT T2.Version_Number, T2.Template_Type_Code
+FROM Templates AS T1
+JOIN Ref_Template_Types AS T2 ON T1.Template_Type_Code = T2.Template_Type_Code
+WHERE T1.Version_Number > 5;",False,False,Runtime Error: no such column: T2.Version_Number,2.789
+13,employee_hire_evaluation,Which district has both stores with less than 3000 products and stores with more than 10000 products?,SELECT district FROM shop WHERE Number_products  <  3000 INTERSECT SELECT district FROM shop WHERE Number_products  >  10000,SELECT T2.District FROM shop AS T1 INNER JOIN employee AS T2 ON T1.Shop_ID = T2.Shop_ID WHERE T1.Number_products < 3000 INTERSECT SELECT T1.District FROM shop AS T1 INNER JOIN employee AS T2 ON T1.Shop_ID = T2.Shop_ID WHERE T1.Number_products > 10000;,False,False,Runtime Error: no such column: T2.Shop_ID,4.346
+14,voter_1,What are the distinct states and create time of all votes?,"SELECT DISTINCT state ,  created FROM votes","SELECT DISTINCT state, created FROM VOTES;",True,True,,0.73
+15,flight_2,Give the city and country for the Alton airport.,"SELECT City ,  Country FROM AIRPORTS WHERE AirportName  =  ""Alton""","SELECT T2.City, T2.Country FROM airports AS T1 INNER JOIN airlines AS T2 ON T1.AirportCode = T2.uid WHERE T1.AirportName = 'Alton';",False,False,Runtime Error: no such column: T2.City,2.496
+16,dog_kennels,"Which professionals live in the state of Indiana or have done treatment on more than 2 treatments? List his or her id, last name and cell phone.","SELECT professional_id ,  last_name ,  cell_number FROM Professionals WHERE state  =  'Indiana' UNION SELECT T1.professional_id ,  T1.last_name ,  T1.cell_number FROM Professionals AS T1 JOIN Treatments AS T2 ON T1.professional_id  =  T2.professional_id GROUP BY T1.professional_id HAVING count(*)  >  2","SELECT T3.professional_id, T3.last_name, T3.cell_number
+FROM Owners AS T1
+JOIN Dogs AS T2 ON T1.owner_id = T2.owner_id
+JOIN Treatments AS T3 ON T2.dog_id = T3.dog_id
+WHERE T1.state = 'Indiana' OR COUNT(T3.treatment_id) > 2;",False,False,Runtime Error: no such column: T3.last_name,4.383
+17,car_1,What are the id and names of the countries which have more than 3 car makers or produce the 'fiat' model?,"SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country GROUP BY T1.countryId HAVING count(*)  >  3 UNION SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country JOIN MODEL_LIST AS T3 ON T2.Id  =  T3.Maker WHERE T3.Model  =  'fiat';","SELECT T2.CountryId, T2.CountryName FROM car_makers AS T1 INNER JOIN countries AS T2 ON T1.Country = T2.CountryId WHERE T1.Maker > 3 OR T1.Model = 'fiat'",False,False,Runtime Error: no such column: T1.Model,2.88
+18,car_1,What are the names of the countries with no car makers?,SELECT CountryName FROM countries EXCEPT SELECT T1.CountryName FROM countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.countryId  =  T2.Country;,SELECT CountryName FROM countries WHERE CountryId NOT IN (SELECT DISTINCT Country FROM car_makers),True,True,,1.289
+19,world_1,"What are the population, name and leader of the country with the largest area?","SELECT Name ,  population ,  HeadOfState FROM country ORDER BY SurfaceArea DESC LIMIT 1","SELECT T2.Population, T1.Name, T1.HeadOfState FROM country AS T1 INNER JOIN city AS T2 ON T1.Code = T2.CountryCode ORDER BY T1.SurfaceArea DESC LIMIT 1;",False,True,,2.707
+20,tvshow,What are the titles of all cartoons directed by Ben Jones or Brandon Vietti?,"SELECT Title FROM Cartoon WHERE Directed_by = ""Ben Jones"" OR Directed_by = ""Brandon Vietti"";",SELECT T1.Title FROM Cartoon AS T1 INNER JOIN TV_Channel AS T2 ON T1.Channel = T2.id WHERE T1.Directed_by = 'Ben Jones' OR T1.Directed_by = 'Brandon Vietti';,True,True,,2.707
+21,battle_death,What are the death and injury situations caused by the ship with tonnage 't'?,"SELECT T1.killed ,  T1.injured FROM death AS T1 JOIN ship AS t2 ON T1.caused_by_ship_id  =  T2.id WHERE T2.tonnage  =  't'","SELECT T2.killed, T2.injured FROM ship AS T1 INNER JOIN death AS T2 ON T1.id = T2.caused_by_ship_id WHERE T1.tonnage = 't';",True,True,,2.531
+22,poker_player,"What are the names and birth dates of people, ordered by their names in alphabetical order?","SELECT Name ,  Birth_Date FROM people ORDER BY Name ASC","SELECT Name, Birth_Date FROM people ORDER BY Name ASC;",True,True,,0.948
+23,world_1,What is the total population and average area of countries in the continent of North America whose area is bigger than 3000 ?,"select sum(population) ,  avg(surfacearea) from country where continent  =  ""north america"" and surfacearea  >  3000","SELECT SUM(T1.Population), AVG(T1.SurfaceArea) 
+FROM country AS T1 
+JOIN city AS T2 ON T1.Code = T2.CountryCode 
+WHERE T1.Continent = 'North America' AND T1.SurfaceArea > 3000;",False,True,,3.262
+24,orchestra,"What are the maximum and minimum share of performances whose type is not ""Live final"".","SELECT max(SHARE) ,  min(SHARE) FROM performance WHERE TYPE != ""Live final""","SELECT MAX(Share) AS Max_Share, MIN(Share) AS Min_Share 
+FROM performance 
+WHERE Type != 'Live final';",True,True,,1.801
+25,dog_kennels,Which dogs have not cost their owner more than 1000 for treatment ? List the dog names .,select name from dogs where dog_id not in ( select dog_id from treatments group by dog_id having sum(cost_of_treatment)  >  1000 ),SELECT T1.name FROM Dogs AS T1 INNER JOIN Treatments AS T2 ON T1.dog_id = T2.dog_id WHERE T2.cost_of_treatment <= 1000 GROUP BY T1.dog_id;,False,True,,2.872
+26,concert_singer,Show the name and theme for all concerts and the number of singers in each concert.,"SELECT T2.concert_name ,  T2.theme ,  count(*) FROM singer_in_concert AS T1 JOIN concert AS T2 ON T1.concert_id  =  T2.concert_id GROUP BY T2.concert_id","SELECT c.concert_Name, c.Theme, COUNT(si.Singer_ID) AS Number_of_Singers
+FROM concert c
+JOIN singer_in_concert si ON c.concert_ID = si.concert_ID
+GROUP BY c.concert_ID, c.concert_Name, c.Theme;",True,True,,3.007
+27,car_1,What is the average edispl for all volvos?,SELECT avg(T2.edispl) FROM CAR_NAMES AS T1 JOIN CARS_DATA AS T2 ON T1.MakeId  =  T2.Id WHERE T1.Model  =  'volvo';,SELECT AVG(Edispl) FROM cars_data WHERE MakeId IN (SELECT MakeId FROM car_names WHERE Maker = 'VOLVO'),False,False,Runtime Error: no such column: Maker,1.721
+28,cre_Doc_Template_Mgt,What are the ids of documents that have 2 or more paragraphs?,SELECT document_id FROM Paragraphs GROUP BY document_id HAVING count(*)  >=  2,SELECT Document_ID FROM Paragraphs GROUP BY Document_ID HAVING COUNT(*) >= 2;,True,True,,1.226
+29,employee_hire_evaluation,Find the names of employees who never won any award in the evaluation.,SELECT name FROM employee WHERE Employee_ID NOT IN (SELECT Employee_ID FROM evaluation),SELECT Name FROM employee WHERE Employee_ID NOT IN (SELECT Employee_ID FROM evaluation),True,True,,1.216
+30,tvshow,What is the series name and country of all TV channels that are playing cartoons directed by Ben Jones and cartoons directed by Michael Chang?,"SELECT T1.series_name ,  T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.directed_by  =  'Michael Chang' INTERSECT SELECT T1.series_name ,  T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.directed_by  =  'Ben Jones'","SELECT T2.series_name, T2.Country 
+FROM Cartoon AS T1 
+JOIN TV_Channel AS T2 ON T1.Channel = T2.id 
+WHERE T1.Directed_by = 'Ben Jones' OR T1.Directed_by = 'Michael Chang';",False,True,,2.996
+31,world_1,What is the number of nations that use English and Dutch?,"SELECT COUNT(*) FROM (SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  ""English"" INTERSECT SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  ""Dutch"")","SELECT COUNT(DISTINCT T1.Code) FROM country AS T1 INNER JOIN countrylanguage AS T2 ON T1.Code = T2.CountryCode WHERE T2.Language IN ('English', 'Dutch');",False,True,,2.478
+32,concert_singer,"What are the names , themes , and number of singers for every concert ?","select t2.concert_name ,  t2.theme ,  count(*) from singer_in_concert as t1 join concert as t2 on t1.concert_id  =  t2.concert_id group by t2.concert_id","SELECT c.concert_Name, c.Theme, COUNT(si.Singer_ID) AS Number_of_Singers
+FROM concert c
+JOIN singer_in_concert si ON c.concert_ID = si.concert_ID
+GROUP BY c.concert_ID, c.concert_Name, c.Theme;",True,True,,3.163
+33,network_1,What are the ids of students who both have friends and are liked?,SELECT student_id FROM Friend INTERSECT SELECT liked_id FROM Likes,SELECT student_id FROM Friend INTERSECT SELECT liked_id FROM Likes;,True,False,Disallowed statement type: Intersect. Only SELECT is permitted.,1.009
+34,cre_Doc_Template_Mgt,"What is the template type descriptions for template type code ""AD"".","SELECT template_type_description FROM Ref_template_types WHERE template_type_code  =  ""AD""",SELECT Template_Type_Description FROM Ref_Template_Types WHERE Template_Type_Code = 'AD';,True,True,,1.153
+35,concert_singer,What is the name and capacity for the stadium with highest average attendance?,"SELECT name ,  capacity FROM stadium ORDER BY average DESC LIMIT 1","SELECT T2.Name, T2.Capacity FROM stadium AS T1 INNER JOIN concert AS T2 ON T1.Stadium_ID = T2.Stadium_ID ORDER BY T1.Average DESC LIMIT 1;",False,False,Runtime Error: no such column: T2.Name,2.446
+36,world_1,What are the names and areas of countries with the top 5 largest area?,"SELECT Name ,  SurfaceArea FROM country ORDER BY SurfaceArea DESC LIMIT 5","SELECT Name, SurfaceArea FROM country ORDER BY SurfaceArea DESC LIMIT 5;",True,True,,1.188
+37,student_transcripts_tracking,How many degrees does the engineering department have?,SELECT count(*) FROM Departments AS T1 JOIN Degree_Programs AS T2 ON T1.department_id  =  T2.department_id WHERE T1.department_name  =  'engineer',SELECT COUNT(DISTINCT degree_program_id) FROM Degree_Programs WHERE department_id = (SELECT department_id FROM Departments WHERE department_name = 'Engineering'),True,True,,2.019
+38,world_1,How many people live in countries that do not speak English?,"SELECT sum(Population) FROM country WHERE Name NOT IN (SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  ""English"")",SELECT SUM(T1.Population) FROM city AS T1 INNER JOIN country AS T2 ON T1.CountryCode = T2.Code WHERE T2.Language != 'English';,False,False,Runtime Error: no such column: T2.Language,2.079
+39,wta_1,"What are the full names of all players, sorted by birth date?","SELECT first_name ,  last_name FROM players ORDER BY birth_date","SELECT first_name, last_name FROM players ORDER BY birth_date ASC;",True,True,,1.096
+40,dog_kennels,What is the charge amount of the most expensive charge type?,SELECT max(charge_amount) FROM Charges,SELECT MAX(charge_amount) FROM Charges,True,True,,0.931
+41,dog_kennels,Which owner has paid for the most treatments on his or her dogs? List the owner id and last name.,"SELECT T1.owner_id ,  T1.last_name FROM Owners AS T1 JOIN Dogs AS T2 ON T1.owner_id  =  T2.owner_id JOIN Treatments AS T3 ON T2.dog_id  =  T3.dog_id GROUP BY T1.owner_id ORDER BY count(*) DESC LIMIT 1","SELECT T3.owner_id, T3.last_name
+FROM Treatments AS T1
+JOIN Dogs AS T2 ON T1.dog_id = T2.dog_id
+JOIN Owners AS T3 ON T2.owner_id = T3.owner_id
+GROUP BY T3.owner_id, T3.last_name
+ORDER BY COUNT(T1.treatment_id) DESC
+LIMIT 1;",True,True,,4.322
+42,world_1,Return the country name and the numbers of languages spoken for each country that speaks at least 3 languages.,"SELECT COUNT(T2.Language) ,  T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode GROUP BY T1.Name HAVING COUNT(*)  >  2","SELECT T2.Name, COUNT(T1.Language) AS NumberOfLanguages
+FROM countrylanguage AS T1
+JOIN country AS T2 ON T1.CountryCode = T2.Code
+GROUP BY T1.CountryCode
+HAVING COUNT(T1.Language) >= 3;",False,True,,3.124
+43,orchestra,"Find the number of orchestras whose record format is ""CD"" or ""DVD"".","SELECT COUNT(*) FROM orchestra WHERE Major_Record_Format  =  ""CD"" OR Major_Record_Format  =  ""DVD""","SELECT COUNT(*) FROM orchestra WHERE Major_Record_Format IN ('CD', 'DVD');",True,True,,1.141
+44,tvshow,which countries' tv channels are not playing any cartoon written by Todd Casey?,SELECT country FROM TV_Channel EXCEPT SELECT T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.written_by  =  'Todd Casey',SELECT T2.Country FROM Cartoon AS T1 INNER JOIN TV_Channel AS T2 ON T1.Channel = T2.id WHERE T1.Written_by != 'Todd Casey',False,True,,2.064
+45,employee_hire_evaluation,Find the number of employees hired in each shop; show the shop name as well.,"SELECT count(*) ,  t2.name FROM hiring AS t1 JOIN shop AS t2 ON t1.shop_id  =  t2.shop_id GROUP BY t2.name","SELECT s.Name, COUNT(*) AS Number_of_Employees
+FROM shop s
+JOIN hiring h ON s.Shop_ID = h.Shop_ID
+GROUP BY s.Name;",False,True,,2.198
+46,network_1,Show name of all students who have some friends and also are liked by someone else.,SELECT T2.name FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id INTERSECT SELECT T2.name FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.liked_id  =  T2.id,SELECT DISTINCT T1.name FROM Highschooler AS T1 INNER JOIN Friend AS T2 ON T1.ID = T2.student_id WHERE T1.ID IN (SELECT liked_id FROM Likes),True,True,,2.143
+47,cre_Doc_Template_Mgt,Count the number of documents.,SELECT count(*) FROM Documents,SELECT COUNT(*) FROM Documents;,True,True,,0.664
+48,flight_2,Which airline has abbreviation 'UAL'?,"SELECT Airline FROM AIRLINES WHERE Abbreviation  =  ""UAL""",SELECT Airline FROM airlines WHERE Abbreviation = 'UAL';,True,True,,0.976
+49,voter_1,What are the names of the contestants whose names are not 'Jessie Alloway',SELECT contestant_name FROM contestants WHERE contestant_name != 'Jessie Alloway',SELECT contestant_name FROM CONTESTANTS WHERE contestant_name != 'Jessie Alloway',True,True,,1.177
+50,tvshow,List the language used least number of TV Channel. List language and number of TV Channel.,"SELECT LANGUAGE ,  count(*) FROM TV_Channel GROUP BY LANGUAGE ORDER BY count(*) ASC LIMIT 1;","SELECT Language, COUNT(*) as Channel_count
+FROM TV_Channel
+GROUP BY Language
+ORDER BY Channel_count ASC
+LIMIT 1;",True,True,,1.702
+51,poker_player,List the names of people that are not poker players.,SELECT Name FROM people WHERE People_ID NOT IN (SELECT People_ID FROM poker_player),SELECT Name FROM people WHERE People_ID NOT IN (SELECT People_ID FROM poker_player),True,True,,1.144
+52,student_transcripts_tracking,What is the description for the section named h?,SELECT section_description FROM Sections WHERE section_name  =  'h',SELECT section_description FROM Sections WHERE section_name = 'h';,True,True,,1.121
+53,world_1,What are the names of cities in Europe for which English is not the official language?,SELECT DISTINCT T2.Name FROM country AS T1 JOIN city AS T2 ON T2.CountryCode  =  T1.Code WHERE T1.Continent  =  'Europe' AND T1.Name NOT IN (SELECT T3.Name FROM country AS T3 JOIN countrylanguage AS T4 ON T3.Code  =  T4.CountryCode WHERE T4.IsOfficial  =  'T' AND T4.Language  =  'English'),SELECT T1.Name FROM city AS T1 INNER JOIN country AS T2 ON T1.CountryCode = T2.Code WHERE T2.Continent = 'Europe' AND T2.Code NOT IN (SELECT CountryCode FROM countrylanguage WHERE Language = 'English' AND IsOfficial = 'T'),False,True,,3.258
+54,course_teach,List the most common hometown of teachers.,SELECT Hometown FROM teacher GROUP BY Hometown ORDER BY COUNT(*) DESC LIMIT 1,SELECT Hometown FROM teacher GROUP BY Hometown ORDER BY COUNT(*) DESC LIMIT 1;,True,True,,1.244
+55,world_1,Give the name of the nation that uses the greatest amount of languages.,SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode GROUP BY T1.Name ORDER BY COUNT(*) DESC LIMIT 1,SELECT T2.Name FROM countrylanguage AS T1 INNER JOIN country AS T2 ON T1.CountryCode = T2.Code GROUP BY T1.CountryCode ORDER BY COUNT(T1.Language) DESC LIMIT 1;,False,True,,2.599
+56,flight_2,How many flights does airline 'JetBlue Airways' have?,"SELECT count(*) FROM FLIGHTS AS T1 JOIN AIRLINES AS T2 ON T1.Airline  =  T2.uid WHERE T2.Airline = ""JetBlue Airways""",SELECT COUNT(*) FROM flights WHERE Airline = (SELECT uid FROM airlines WHERE Airline = 'JetBlue Airways'),True,True,,1.5
+57,cre_Doc_Template_Mgt,Return the id and name of the document with the most paragraphs.,"SELECT T1.document_id ,  T2.document_name FROM Paragraphs AS T1 JOIN Documents AS T2 ON T1.document_id  =  T2.document_id GROUP BY T1.document_id ORDER BY count(*) DESC LIMIT 1","SELECT D.Document_ID, D.Document_Name
+FROM Documents D
+JOIN Paragraphs P ON D.Document_ID = P.Document_ID
+GROUP BY D.Document_ID, D.Document_Name
+ORDER BY COUNT(P.Paragraph_ID) DESC
+LIMIT 1;",True,True,,2.87
+58,car_1,How many countries are listed?,SELECT count(*) FROM COUNTRIES;,SELECT COUNT(*) FROM countries;,True,True,,0.733
+59,flight_2,"What are flight numbers of flights departing from City ""Aberdeen ""?","SELECT T1.FlightNo FROM FLIGHTS AS T1 JOIN AIRPORTS AS T2 ON T1.SourceAirport   =  T2.AirportCode WHERE T2.City  =  ""Aberdeen""",SELECT T2.FlightNo FROM airports AS T1 INNER JOIN flights AS T2 ON T1.AirportCode = T2.SourceAirport WHERE T1.City = 'Aberdeen';,True,True,,2.284
+60,flight_2,Which airline has most number of flights?,SELECT T1.Airline FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) DESC LIMIT 1,SELECT T1.Airline FROM airlines AS T1 INNER JOIN flights AS T2 ON T1.uid = T2.Airline GROUP BY T1.uid ORDER BY COUNT(*) DESC LIMIT 1;,False,True,,2.204
+61,wta_1,Find the highest rank of losers in all matches.,SELECT min(loser_rank) FROM matches,SELECT MAX(loser_rank) FROM matches;,False,True,,0.818
+62,world_1,Which continent is Anguilla in?,"SELECT Continent FROM country WHERE Name  =  ""Anguilla""",SELECT T2.Continent FROM country AS T1 INNER JOIN countrylanguage AS T2 ON T1.Code = T2.CountryCode WHERE T1.Name = 'Anguilla';,False,False,Runtime Error: no such column: T2.Continent,2.054
+63,poker_player,List the final tables made and the best finishes of poker players.,"SELECT Final_Table_Made ,  Best_Finish FROM poker_player","SELECT T2.Final_Table_Made, T2.Best_Finish FROM poker_player AS T1 INNER JOIN people AS T2 ON T1.People_ID = T2.People_ID;",False,False,Runtime Error: no such column: T2.Final_Table_Made,2.174
+64,dog_kennels,"List each owner's first name, last name, and the size of his for her dog.","SELECT T1.first_name ,  T1.last_name ,  T2.size_code FROM Owners AS T1 JOIN Dogs AS T2 ON T1.owner_id  =  T2.owner_id","SELECT Owners.first_name, Owners.last_name, Dogs.size_code
+FROM Owners
+JOIN Dogs ON Owners.owner_id = Dogs.owner_id;",True,True,,1.737
+65,network_1,What is the average grade of students who have friends?,SELECT avg(grade) FROM Highschooler WHERE id IN (SELECT T1.student_id FROM Friend AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id),SELECT AVG(T2.grade) FROM Friend AS T1 INNER JOIN Highschooler AS T2 ON T1.student_id = T2.ID GROUP BY T1.student_id;,False,True,,1.917
+66,dog_kennels,Find the number of professionals who have not treated any dogs.,SELECT count(*) FROM Professionals WHERE professional_id NOT IN ( SELECT professional_id FROM Treatments ),SELECT COUNT(*) FROM Professionals WHERE professional_id NOT IN (SELECT professional_id FROM Treatments),True,True,,1.324
+67,cre_Doc_Template_Mgt,How many documents do we have?,SELECT count(*) FROM Documents,SELECT COUNT(*) FROM Documents;,True,True,,0.607
+68,student_transcripts_tracking,What are the names and id of courses having at most 2 sections?,"SELECT T1.course_name ,  T1.course_id FROM Courses AS T1 JOIN Sections AS T2 ON T1.course_id  =  T2.course_id GROUP BY T1.course_id HAVING count(*)  <=  2","SELECT T1.course_name, T1.course_id FROM Courses AS T1 INNER JOIN Sections AS T2 ON T1.course_id = T2.course_id GROUP BY T1.course_id HAVING COUNT(T2.section_id) <= 2;",True,True,,2.967
+69,pets_1,Find the number of dog pets that are raised by female students (with sex F).,SELECT count(*) FROM student AS T1 JOIN has_pet AS T2 ON T1.stuid  =  T2.stuid JOIN pets AS T3 ON T2.petid  =  T3.petid WHERE T1.sex  =  'F' AND T3.pettype  =  'dog',"SELECT COUNT(T1.PetID) 
+FROM Has_Pet AS T1 
+JOIN Pets AS T2 ON T1.PetID = T2.PetID 
+JOIN Student AS T3 ON T1.StuID = T3.StuID 
+WHERE T2.PetType = 'Dog' AND T3.Sex = 'F';",False,True,,3.666
+70,employee_hire_evaluation,What are the minimum and maximum number of products across all the shops?,"SELECT min(Number_products) ,  max(Number_products) FROM shop","SELECT MIN(Number_products), MAX(Number_products) FROM shop;",True,True,,0.938
+71,cre_Doc_Template_Mgt,Show all template type codes with less than three templates.,SELECT template_type_code FROM Templates GROUP BY template_type_code HAVING count(*)  <  3,SELECT Template_Type_Code FROM Templates GROUP BY Template_Type_Code HAVING COUNT(*) < 3;,True,True,,1.258
+72,network_1,"Show the names of high schoolers who have likes, and numbers of likes for each.","SELECT T2.name ,  count(*) FROM Likes AS T1 JOIN Highschooler AS T2 ON T1.student_id  =  T2.id GROUP BY T1.student_id","SELECT T1.name, COUNT(T2.liked_id) AS num_likes
+FROM Highschooler AS T1
+JOIN Likes AS T2 ON T1.ID = T2.student_id
+GROUP BY T1.name;",False,True,,2.441
+73,tvshow,"What is the title of all the cartools that are on the TV Channel with the series name ""Sky Radio""?","SELECT T2.Title FROM TV_Channel AS T1 JOIN Cartoon AS T2 ON T1.id = T2.Channel WHERE T1.series_name = ""Sky Radio"";",SELECT T1.Title FROM Cartoon AS T1 INNER JOIN TV_Channel AS T2 ON T1.Channel = T2.id WHERE T2.series_name = 'Sky Radio',True,True,,1.963
+74,world_1,Which countries have either English or Dutch as an official language?,"SELECT * FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  ""English"" AND IsOfficial  =  ""T"" UNION SELECT * FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  ""Dutch"" AND IsOfficial  =  ""T""","SELECT T1.Name FROM country AS T1 INNER JOIN countrylanguage AS T2 ON T1.Code = T2.CountryCode WHERE T2.Language IN ('English', 'Dutch');",False,True,,2.254
+75,course_teach,Show the hometowns shared by at least two teachers.,SELECT Hometown FROM teacher GROUP BY Hometown HAVING COUNT(*)  >=  2,SELECT Hometown FROM teacher GROUP BY Hometown HAVING COUNT(*) >= 2;,True,True,,1.124
+76,cre_Doc_Template_Mgt,How many templates have template type code CV?,"SELECT count(*) FROM Templates WHERE template_type_code  =  ""CV""",SELECT COUNT(Template_ID) FROM Templates WHERE Template_Type_Code = 'CV';,True,True,,1.093
+77,wta_1,How many total tours were there for each ranking date?,"SELECT sum(tours) ,  ranking_date FROM rankings GROUP BY ranking_date","SELECT ranking_date, COUNT(DISTINCT tours) AS total_tours
+FROM rankings
+GROUP BY ranking_date;",False,True,,1.511
+78,world_1,What are the region and population of Angola?,"SELECT Population ,  Region FROM country WHERE Name  =  ""Angola""","SELECT T2.Region, T1.Population FROM country AS T1 INNER JOIN city AS T2 ON T1.Code = T2.CountryCode WHERE T1.Name = 'Angola';",False,False,Runtime Error: no such column: T2.Region,2.252
+79,cre_Doc_Template_Mgt,Count the number of templates.,SELECT count(*) FROM Templates,SELECT COUNT(Template_ID) FROM Templates;,True,True,,0.825
+80,world_1,What are the names of all the countries that became independent after 1950?,SELECT Name FROM country WHERE IndepYear  >  1950,SELECT Name FROM country WHERE IndepYear > 1950;,True,True,,1.098
+81,poker_player,Return the names of poker players sorted by their earnings descending.,SELECT T1.Name FROM people AS T1 JOIN poker_player AS T2 ON T1.People_ID  =  T2.People_ID ORDER BY T2.Earnings DESC,SELECT T2.Name FROM poker_player AS T1 INNER JOIN people AS T2 ON T1.People_ID = T2.People_ID ORDER BY T1.Earnings DESC;,True,True,,1.975
+82,world_1,Count the number of countries for which Spanish is the predominantly spoken language.,"SELECT count(*) ,   max(Percentage) FROM countrylanguage WHERE LANGUAGE  =  ""Spanish"" GROUP BY CountryCode","SELECT COUNT(*) 
+FROM countrylanguage 
+WHERE Language = 'Spanish' AND IsOfficial = 'T';",False,True,,1.409
+83,wta_1,List the number of all matches who played in years of 2013 or 2016.,SELECT count(*) FROM matches WHERE YEAR  =  2013 OR YEAR  =  2016,"SELECT COUNT(*) FROM matches WHERE year IN (2013, 2016);",True,True,,1.335
+84,dog_kennels,How many dogs have not gone through any treatment?,SELECT count(*) FROM Dogs WHERE dog_id NOT IN ( SELECT dog_id FROM Treatments ),SELECT COUNT(*) FROM Dogs WHERE dog_id NOT IN (SELECT dog_id FROM Treatments),True,True,,1.324
+85,tvshow,What are the countries that are not playing cartoons written by Todd Casey?,SELECT country FROM TV_Channel EXCEPT SELECT T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.written_by  =  'Todd Casey',SELECT DISTINCT T2.Country FROM Cartoon AS T1 INNER JOIN TV_Channel AS T2 ON T1.Channel = T2.id WHERE T1.Written_by != 'Todd Casey',False,True,,2.039
+86,flight_2,"What are flight numbers of flights departing from Airport ""APG""?","SELECT FlightNo FROM FLIGHTS WHERE SourceAirport  =  ""APG""",SELECT T2.FlightNo FROM airports AS T1 INNER JOIN flights AS T2 ON T1.AirportCode = T2.SourceAirport WHERE T1.AirportName = 'APG';,True,True,,2.24
+87,car_1,What are the names and ids of all makers with more than 3 models?,"SELECT T1.FullName ,  T1.Id FROM CAR_MAKERS AS T1 JOIN MODEL_LIST AS T2 ON T1.Id  =  T2.Maker GROUP BY T1.Id HAVING count(*)  >  3;","SELECT Maker, Id FROM car_makers WHERE Id IN (
+    SELECT Maker FROM car_names GROUP BY Maker HAVING COUNT(*) > 3
+)",False,True,,1.81
+88,voter_1,How many contestants did not get voted?,SELECT count(*) FROM contestants WHERE contestant_number NOT IN ( SELECT contestant_number FROM votes ),SELECT COUNT(contestant_number) FROM CONTESTANTS WHERE contestant_number NOT IN (SELECT contestant_number FROM VOTES),True,True,,1.443
+89,tvshow,How many cartoons did each director create?,"SELECT count(*) ,  Directed_by FROM cartoon GROUP BY Directed_by","SELECT Directed_by, COUNT(*) as Cartoon_count
+FROM Cartoon
+GROUP BY Directed_by;",False,True,,1.178
+90,course_teach,What are the age and hometown of teachers?,"SELECT Age ,  Hometown FROM teacher","SELECT Age, Hometown FROM teacher;",True,True,,0.71
+91,voter_1,What are the contestant numbers and names of the contestants who had at least two votes?,"SELECT T1.contestant_number , T1.contestant_name FROM contestants AS T1 JOIN votes AS T2 ON T1.contestant_number  =  T2.contestant_number GROUP BY T1.contestant_number HAVING count(*)  >=  2","SELECT T2.contestant_number, T2.contestant_name
+FROM VOTES AS T1
+JOIN CONTESTANTS AS T2 ON T1.contestant_number = T2.contestant_number
+GROUP BY T1.contestant_number
+HAVING COUNT(*) >= 2;",True,True,,3.215
+92,flight_2,Which city has most number of arriving flights?,SELECT T1.City FROM AIRPORTS AS T1 JOIN FLIGHTS AS T2 ON T1.AirportCode  =  T2.DestAirport GROUP BY T1.City ORDER BY count(*) DESC LIMIT 1,SELECT T2.City FROM flights AS T1 INNER JOIN airports AS T2 ON T1.DestAirport = T2.AirportCode GROUP BY T2.City ORDER BY COUNT(*) DESC LIMIT 1;,True,True,,2.267
+93,dog_kennels,Which breed do the most dogs have? Give me the breed name.,SELECT T1.breed_name FROM Breeds AS T1 JOIN Dogs AS T2 ON T1.breed_code  =  T2.breed_code GROUP BY T1.breed_name ORDER BY count(*) DESC LIMIT 1,SELECT T1.breed_name FROM Breeds AS T1 INNER JOIN Dogs AS T2 ON T1.breed_code = T2.breed_code GROUP BY T1.breed_name ORDER BY COUNT(*) DESC LIMIT 1;,True,True,,2.738
+94,employee_hire_evaluation,List the names of employees and sort in ascending order of age.,SELECT name FROM employee ORDER BY age,SELECT Name FROM employee ORDER BY Age ASC;,True,True,,0.767
+95,cre_Doc_Template_Mgt,Show all template type codes and number of templates for each.,"SELECT template_type_code ,  count(*) FROM Templates GROUP BY template_type_code","SELECT Template_Type_Code, COUNT(Template_ID) AS Number_of_Templates
+FROM Templates
+GROUP BY Template_Type_Code;",True,True,,1.494
+96,poker_player,Count the number of poker players.,SELECT count(*) FROM poker_player,SELECT COUNT(*) FROM poker_player;,True,True,,0.609
+97,tvshow,find the pixel aspect ratio and nation of the tv channels that do not use English.,"SELECT Pixel_aspect_ratio_PAR ,  country FROM tv_channel WHERE LANGUAGE != 'English'","SELECT Pixel_aspect_ratio_PAR, Country FROM TV_Channel WHERE Language != 'English';",True,True,,1.073
+98,poker_player,Give the nationality that is most common across all people.,SELECT Nationality FROM people GROUP BY Nationality ORDER BY COUNT(*) DESC LIMIT 1,SELECT Nationality FROM people GROUP BY Nationality ORDER BY COUNT(*) DESC LIMIT 1;,True,True,,1.144
+99,wta_1,Find the name and rank points of the winner who won the most times.,"SELECT winner_name ,  winner_rank_points FROM matches GROUP BY winner_name ORDER BY count(*) DESC LIMIT 1","SELECT winner_name, winner_rank_points
+FROM matches
+GROUP BY winner_id
+ORDER BY COUNT(*) DESC
+LIMIT 1;",True,True,,1.669
+100,world_1,Return the names of cities that have a population between 160000 and 900000 .,select name from city where population between 160000 and 900000,SELECT Name FROM city WHERE Population BETWEEN 160000 AND 900000;,True,True,,1.472

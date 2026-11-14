@@ -1,0 +1,152 @@
+[
+  {
+    "index": 1,
+    "eval_id": "2",
+    "db_id": "world_1",
+    "question": "Which language is the most popular on the Asian continent?",
+    "gold_sql": "SELECT T2.Language FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T1.Continent  =  \"Asia\" GROUP BY T2.Language ORDER BY COUNT (*) DESC LIMIT 1",
+    "pred_sql": "SELECT Language, SUM(Percentage) as Total FROM countrylanguage WHERE CountryCode IN (SELECT Code FROM country WHERE Continent = 'Asia') GROUP BY Language ORDER BY Total DESC LIMIT 1;",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 2,
+    "eval_id": "6",
+    "db_id": "singer",
+    "question": "What are the names of the singers who are not French citizens?",
+    "gold_sql": "SELECT Name FROM singer WHERE Citizenship != \"France\"",
+    "pred_sql": "SELECT Name FROM singer WHERE Citizenship != 'French';",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 3,
+    "eval_id": "7",
+    "db_id": "flight_2",
+    "question": "Find the abbreviation and country of the airline that has fewest number of flights?",
+    "gold_sql": "SELECT T1.Abbreviation ,  T1.Country FROM AIRLINES AS T1 JOIN FLIGHTS AS T2 ON T1.uid  =  T2.Airline GROUP BY T1.Airline ORDER BY count(*) LIMIT 1",
+    "pred_sql": "SELECT A.Abbreviation, A.Country FROM airlines A JOIN (SELECT SourceAirport, COUNT(*) as num_flights FROM flights GROUP BY SourceAirport ORDER BY num_flights ASC LIMIT 1) F ON A.uid = F.SourceAirport;",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 4,
+    "eval_id": "9",
+    "db_id": "car_1",
+    "question": "How many car makers are there in france?",
+    "gold_sql": "SELECT count(*) FROM CAR_MAKERS AS T1 JOIN COUNTRIES AS T2 ON T1.Country  =  T2.CountryId WHERE T2.CountryName  =  'france';",
+    "pred_sql": "SELECT COUNT(*) FROM car_makers WHERE Country = 'France';",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 5,
+    "eval_id": "10",
+    "db_id": "flight_2",
+    "question": "What are the airline names and abbreviations for airlines in the USA?",
+    "gold_sql": "SELECT Airline ,  Abbreviation FROM AIRLINES WHERE Country  =  \"USA\"",
+    "pred_sql": "SELECT A.Airline, A.Abbreviation FROM airlines A JOIN flights F ON A.uid = F.Airline WHERE A.Country = 'USA';",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 6,
+    "eval_id": "11",
+    "db_id": "cre_Doc_Template_Mgt",
+    "question": "What is the id and type code for the template used by the most documents?",
+    "gold_sql": "SELECT T1.template_id ,  T2.Template_Type_Code FROM Documents AS T1 JOIN Templates AS T2 ON T1.template_id  =  T2.template_id GROUP BY T1.template_id ORDER BY count(*) DESC LIMIT 1",
+    "pred_sql": "SELECT Template_ID, Template_Type_Code FROM Documents GROUP BY Template_ID, Template_Type_Code ORDER BY COUNT(*) DESC LIMIT 1;",
+    "valid_sql": "False",
+    "error_msg": "Runtime Error: no such column: Template_Type_Code"
+  },
+  {
+    "index": 7,
+    "eval_id": "17",
+    "db_id": "car_1",
+    "question": "What are the id and names of the countries which have more than 3 car makers or produce the 'fiat' model?",
+    "gold_sql": "SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country GROUP BY T1.countryId HAVING count(*)  >  3 UNION SELECT T1.countryId ,  T1.CountryName FROM Countries AS T1 JOIN CAR_MAKERS AS T2 ON T1.CountryId  =  T2.Country JOIN MODEL_LIST AS T3 ON T2.Id  =  T3.Maker WHERE T3.Model  =  'fiat';",
+    "pred_sql": "SELECT c.CountryName, COUNT(*) FROM car_makers cm JOIN countries c ON cm.Country = c.CountryName WHERE cm.Maker IN ('Ford', 'Chevrolet', 'Toyota') OR cm.Model = 'fiat' GROUP BY c.CountryName HAVING COUNT(*) > 3;",
+    "valid_sql": "False",
+    "error_msg": "Runtime Error: no such column: cm.Model"
+  },
+  {
+    "index": 8,
+    "eval_id": "19",
+    "db_id": "world_1",
+    "question": "What are the population, name and leader of the country with the largest area?",
+    "gold_sql": "SELECT Name ,  population ,  HeadOfState FROM country ORDER BY SurfaceArea DESC LIMIT 1",
+    "pred_sql": "SELECT c.Population, c.Name, c.HeadOfState FROM country c ORDER BY c.SurfaceArea DESC LIMIT 1;",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 9,
+    "eval_id": "21",
+    "db_id": "battle_death",
+    "question": "What are the death and injury situations caused by the ship with tonnage 't'?",
+    "gold_sql": "SELECT T1.killed ,  T1.injured FROM death AS T1 JOIN ship AS t2 ON T1.caused_by_ship_id  =  T2.id WHERE T2.tonnage  =  't'",
+    "pred_sql": "SELECT d.note, d.killed, d.injured FROM death d JOIN ship s ON d.caused_by_ship_id = s.id WHERE s.tonnage = 't';",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 10,
+    "eval_id": "23",
+    "db_id": "world_1",
+    "question": "What is the total population and average area of countries in the continent of North America whose area is bigger than 3000 ?",
+    "gold_sql": "select sum(population) ,  avg(surfacearea) from country where continent  =  \"north america\" and surfacearea  >  3000",
+    "pred_sql": "SELECT SUM(Population), AVG(SurfaceArea) FROM country WHERE Continent = 'North America' AND SurfaceArea > 3000;",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 11,
+    "eval_id": "25",
+    "db_id": "dog_kennels",
+    "question": "Which dogs have not cost their owner more than 1000 for treatment ? List the dog names .",
+    "gold_sql": "select name from dogs where dog_id not in ( select dog_id from treatments group by dog_id having sum(cost_of_treatment)  >  1000 )",
+    "pred_sql": "SELECT d.name FROM Dogs d JOIN Treatments t ON d.dog_id = t.dog_id WHERE t.cost_of_treatment <= 1000;",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 12,
+    "eval_id": "27",
+    "db_id": "car_1",
+    "question": "What is the average edispl for all volvos?",
+    "gold_sql": "SELECT avg(T2.edispl) FROM CAR_NAMES AS T1 JOIN CARS_DATA AS T2 ON T1.MakeId  =  T2.Id WHERE T1.Model  =  'volvo';",
+    "pred_sql": "SELECT AVG(Edispl) FROM cars_data WHERE Model = 'Volvo';",
+    "valid_sql": "False",
+    "error_msg": "Runtime Error: no such column: Model"
+  },
+  {
+    "index": 13,
+    "eval_id": "30",
+    "db_id": "tvshow",
+    "question": "What is the series name and country of all TV channels that are playing cartoons directed by Ben Jones and cartoons directed by Michael Chang?",
+    "gold_sql": "SELECT T1.series_name ,  T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.directed_by  =  'Michael Chang' INTERSECT SELECT T1.series_name ,  T1.country FROM TV_Channel AS T1 JOIN cartoon AS T2 ON T1.id = T2.Channel WHERE T2.directed_by  =  'Ben Jones'",
+    "pred_sql": "SELECT T2.series_name, T2.Country FROM Cartoon AS T1 INNER JOIN TV_Channel AS T2 ON T1.Channel = T2.id WHERE T1.Directed_by = 'Ben Jones' OR T1.Directed_by = 'Michael Chang';",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 14,
+    "eval_id": "31",
+    "db_id": "world_1",
+    "question": "What is the number of nations that use English and Dutch?",
+    "gold_sql": "SELECT COUNT(*) FROM (SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"English\" INTERSECT SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"Dutch\")",
+    "pred_sql": "SELECT COUNT(DISTINCT T1.Code) FROM country AS T1 INNER JOIN countrylanguage AS T2 ON T1.Code = T2.CountryCode WHERE T2.Language IN ('English', 'Dutch');",
+    "valid_sql": "True",
+    "error_msg": ""
+  },
+  {
+    "index": 15,
+    "eval_id": "38",
+    "db_id": "world_1",
+    "question": "How many people live in countries that do not speak English?",
+    "gold_sql": "SELECT sum(Population) FROM country WHERE Name NOT IN (SELECT T1.Name FROM country AS T1 JOIN countrylanguage AS T2 ON T1.Code  =  T2.CountryCode WHERE T2.Language  =  \"English\")",
+    "pred_sql": "SELECT COUNT(*) FROM country WHERE Code NOT IN (SELECT CountryCode FROM countrylanguage WHERE Language = 'English');",
+    "valid_sql": "True",
+    "error_msg": ""
+  }
+]

@@ -1,0 +1,6 @@
+=== LEAKAGE CHECK REPORT ===
+Date: leakage_check.txt
+Total Training Samples Checked: 5000
+Total Eval Questions Checked: 100
+Direct Leaked Questions: 0
+Leakage Status: PASSED (Zero Overlap)

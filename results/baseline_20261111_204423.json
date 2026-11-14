@@ -1,0 +1,12 @@
+{
+  "config_name": "baseline",
+  "base_model": "Qwen/Qwen2.5-Coder-3B-Instruct",
+  "adapter_path": null,
+  "timestamp": "2026-11-11T20:44:23.484613",
+  "total_questions": 100,
+  "execution_accuracy_pct": 61.0,
+  "valid_sql_rate_pct": 86.0,
+  "avg_seconds_per_question": 1.911,
+  "json_file": "results\\baseline_20261111_204423.json",
+  "csv_file": "results\\baseline_20261111_204423.csv"
+}

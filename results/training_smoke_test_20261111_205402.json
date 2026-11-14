@@ -1,0 +1,27 @@
+{
+  "mode": "smoke_test",
+  "timestamp": "2026-11-11T20:54:02.071694",
+  "base_model": "Qwen/Qwen2.5-Coder-3B-Instruct",
+  "epochs": 1,
+  "total_training_samples": 16,
+  "duration_minutes": 0.32,
+  "peak_vram_gb": 3.92,
+  "train_loss": 2.6893391609191895,
+  "loss_history": [
+    {
+      "step": 1,
+      "epoch": 1.0,
+      "loss": 2.9081,
+      "learning_rate": 0.0002,
+      "peak_vram_gb": 3.89
+    },
+    {
+      "step": 2,
+      "epoch": 2.0,
+      "loss": 2.4706,
+      "learning_rate": 0.0001,
+      "peak_vram_gb": 3.92
+    }
+  ],
+  "final_adapter_path": null
+}
