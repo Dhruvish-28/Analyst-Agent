@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text-to-SQL Analyst Agent | Qwen2.5-Coder + LangGraph</title>
+  
+  <!-- Google Fonts: IBM Plex Sans & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"IBM Plex Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#f0fdf4',
+              500: '#22c55e',
+              600: '#16a34a',
+            },
+            slate: {
+              850: '#151e2e',
+              900: '#0f172a',
+              950: '#090d16',
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Prism.js for SQL Syntax Highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-sql.min.js"></script>
+
+  <!-- Lucide Icons -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+
+  <style>
+    /* Custom Scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #0f172a;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 3px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #475569;
+    }
+    pre[class*="language-"] {
+      margin: 0 !important;
+      background: #0b0f19 !important;
+      border-radius: 0.5rem;
+    }
+    code[class*="language-"] {
+      font-family: 'JetBrains Mono', monospace !important;
+      font-size: 0.85rem !important;
+    }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 font-sans antialiased min-h-screen flex flex-col">
+
+  <!-- ================= TOP NAVIGATION & HARDWARE TELEMETRY ================= -->
+  <header class="border-b border-slate-800 bg-slate-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      
+      <!-- Logo & Title -->
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
+          <i data-lucide="database" class="w-5 h-5"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="font-bold text-base tracking-tight text-white">Text-to-SQL Analyst</span>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">LangGraph Agent</span>
+          </div>
+          <p class="text-xs text-slate-400 font-mono">Qwen2.5-Coder-3B QLoRA • Self-Healing Loop</p>
+        </div>
+      </div>
+
+      <!-- Live GPU & Benchmark Telemetry -->
+      <div class="flex items-center space-x-3">
+        
+        <!-- Benchmark Badge -->
+        <div class="hidden md:flex items-center space-x-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700/60 text-xs">
+          <span class="text-slate-400 font-medium">Spider Benchmark:</span>
+          <span class="text-emerald-400 font-bold font-mono">97.0% Valid-SQL</span>
+          <span class="text-slate-600">|</span>
+          <span class="text-sky-400 font-semibold font-mono">58.0% EX</span>
+        </div>
+
+        <!-- GPU Hardware Pill -->
+        <div id="hardware-pill" class="flex items-center space-x-2 px-3 py-1 rounded-md bg-slate-800/80 border border-slate-700/60 text-xs">
+          <span class="relative flex h-2 w-2">
+            <span id="gpu-pulse" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+            <span id="gpu-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+          </span>
+          <span id="gpu-name" class="font-medium text-slate-300">RTX 3060 12GB</span>
+          <span class="text-slate-600">|</span>
+          <span id="vram-stat" class="font-mono text-slate-400">VRAM: 1.0 / 12.0 GB</span>
+        </div>
+
+        <!-- API Docs link -->
+        <a href="/docs" target="_blank" class="p-1.5 text-slate-400 hover:text-white rounded-md hover:bg-slate-800 transition cursor-pointer" title="Open API Documentation (Swagger)">
+          <i data-lucide="file-code" class="w-4 h-4"></i>
+        </a>
+      </div>
+
+    </div>
+  </header>
+
+  <!-- ================= CONNECTION STATUS BANNER (WHEN BACKEND DISCONNECTED) ================= -->
+  <div id="connection-banner" class="hidden max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+    <div class="bg-amber-950/50 border border-amber-600/50 rounded-xl p-3 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs text-amber-200">
+      <div class="flex items-center gap-2">
+        <i data-lucide="wifi-off" class="w-4 h-4 text-amber-400 flex-shrink-0"></i>
+        <span>
+          <strong>Backend Server Disconnected:</strong> Cannot connect to FastAPI API at <code class="font-mono bg-slate-900 px-1.5 py-0.5 rounded text-amber-300">http://127.0.0.1:8000</code>.
+          Start the server in your terminal with: <code class="font-mono bg-slate-900 px-1.5 py-0.5 rounded text-emerald-400">.venv\Scripts\python -m uvicorn src.api:app --port 8000</code>
+        </span>
+      </div>
+      <button onclick="fetchHealth(); fetchDatabases();" class="px-3 py-1 bg-amber-600/30 hover:bg-amber-600/50 border border-amber-500/50 rounded text-amber-100 font-semibold transition cursor-pointer self-end sm:self-auto">
+        Retry Connection
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= MAIN LAYOUT ================= -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- ================= LEFT SIDEBAR (DATABASE & CONFIGURATION) ================= -->
+    <aside class="lg:col-span-4 space-y-6">
+      
+      <!-- Database Selector Card -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-4">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+            <i data-lucide="layers" class="w-4 h-4 text-emerald-400"></i>
+            Target Database
+          </label>
+          <span id="db-count-badge" class="text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded">18 Available</span>
+        </div>
+
+        <div>
+          <select id="db-select" class="w-full bg-slate-950 border border-slate-700 text-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition cursor-pointer">
+            <option value="" disabled selected>Loading databases...</option>
+          </select>
+        </div>
+
+        <!-- Database Metadata & Tables -->
+        <div id="db-metadata-box" class="space-y-3 pt-2 border-t border-slate-800/80">
+          <div class="flex items-center justify-between text-xs text-slate-400">
+            <span>Tables:</span>
+            <span id="db-size-stat" class="font-mono text-slate-500"></span>
+          </div>
+          <div id="table-chips" class="flex flex-wrap gap-1.5">
+            <span class="text-xs text-slate-500 italic">Select a database to view tables</span>
+          </div>
+
+          <!-- Collapsible DDL Schema Viewer -->
+          <details class="group pt-2">
+            <summary class="text-xs font-medium text-slate-400 hover:text-emerald-400 cursor-pointer flex items-center justify-between list-none py-1">
+              <span class="flex items-center gap-1">
+                <i data-lucide="code" class="w-3.5 h-3.5"></i>
+                View Full Schema (DDL)
+              </span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 group-open:rotate-180 transition-transform"></i>
+            </summary>
+            <div class="mt-2 max-h-48 overflow-y-auto rounded-lg border border-slate-800 bg-slate-950 p-2.5">
+              <pre><code id="schema-code" class="language-sql text-xs font-mono text-slate-300">-- Schema will render here</code></pre>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Advanced Agent Settings (Collapsible) -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl shadow-sm overflow-hidden">
+        <details class="group">
+          <summary class="p-4 flex items-center justify-between cursor-pointer list-none select-none hover:bg-slate-850/50 transition">
+            <div class="flex items-center gap-2">
+              <i data-lucide="sliders" class="w-4 h-4 text-emerald-400"></i>
+              <span class="text-xs font-semibold text-slate-300 uppercase tracking-wider">Advanced Agent Settings</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <span id="active-strategy-pill" class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Resample (Active)</span>
+              <i data-lucide="chevron-down" class="w-3.5 h-3.5 text-slate-400 group-open:rotate-180 transition-transform"></i>
+            </div>
+          </summary>
+
+          <div class="p-4 pt-2 border-t border-slate-800 space-y-4">
+            <!-- Strategy Selector -->
+            <div class="space-y-2">
+              <label class="text-xs text-slate-400 block font-medium">Self-Healing Strategy</label>
+              
+              <div class="space-y-2">
+                <!-- Option 1: Resample -->
+                <button type="button" id="strat-resample" onclick="setStrategy('resample')"
+                  class="w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-emerald-500 bg-emerald-500/10 text-emerald-300">
+                  <div class="flex items-center justify-between font-semibold">
+                    <span class="flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+                      Resample (Recommended)
+                    </span>
+                    <span class="text-[10px] bg-emerald-500/20 px-1.5 py-0.5 rounded text-emerald-300">97% Valid-SQL</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400 font-normal mt-1 leading-relaxed">
+                    Generates alternative variations of the query if the first attempt errors. Best for general querying.
+                  </p>
+                </button>
+
+                <!-- Option 2: Error Feedback -->
+                <button type="button" id="strat-feedback" onclick="setStrategy('error_feedback')"
+                  class="w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-slate-700 bg-slate-950 text-slate-400 hover:border-slate-600">
+                  <div class="flex items-center justify-between font-semibold text-slate-300">
+                    <span class="flex items-center gap-1.5">
+                      <span class="w-2 h-2 rounded-full bg-slate-600"></span>
+                      Error Feedback
+                    </span>
+                    <span class="text-[10px] bg-slate-800 px-1.5 py-0.5 rounded text-slate-400">Multi-Turn</span>
+                  </div>
+                  <p class="text-[11px] text-slate-500 font-normal mt-1 leading-relaxed">
+                    Passes the database error message back to the model to ask for a targeted correction.
+                  </p>
+                </button>
+              </div>
+            </div>
+
+            <!-- Max Retries Slider -->
+            <div class="space-y-1.5 pt-2 border-t border-slate-800/80">
+              <div class="flex items-center justify-between text-xs">
+                <span class="text-slate-400 font-medium">Max Retry Attempts</span>
+                <span id="retry-val-display" class="font-mono text-emerald-400 font-semibold">3 attempts</span>
+              </div>
+              <input id="max-retries-slider" type="range" min="1" max="5" value="3" 
+                class="w-full h-1.5 bg-slate-950 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+                oninput="document.getElementById('retry-val-display').innerText = this.value + ' attempts'">
+              <p class="text-[10px] text-slate-500">Number of self-healing retry cycles if query fails AST or SQLite execution.</p>
+            </div>
+          </div>
+        </details>
+      </div>
+
+      <!-- Sample Questions for Selected Database -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4 shadow-sm space-y-3">
+        <label class="text-xs font-semibold text-slate-300 uppercase tracking-wider flex items-center gap-1.5">
+          <i data-lucide="sparkles" class="w-4 h-4 text-emerald-400"></i>
+          Sample Benchmark Questions
+        </label>
+        <p class="text-xs text-slate-400">Click any prompt to populate the analyst query:</p>
+        <div id="sample-questions" class="space-y-2">
+          <!-- Dynamically populated -->
+        </div>
+      </div>
+
+    </aside>
+
+    <!-- ================= RIGHT COLUMN (QUERY CONSOLE, TRACE & DATA GRID) ================= -->
+    <section class="lg:col-span-8 space-y-6">
+      
+      <!-- Query Input Console -->
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm space-y-4">
+        
+        <div class="flex items-center justify-between">
+          <label for="question-input" class="text-sm font-semibold text-slate-200 flex items-center gap-2">
+            <i data-lucide="message-square" class="w-4 h-4 text-emerald-400"></i>
+            Natural Language Question
+          </label>
+          <span class="text-xs text-slate-500 font-mono hidden sm:inline">Press Ctrl + Enter to run</span>
+        </div>
+
+        <div class="relative">
+          <textarea id="question-input" rows="3" 
+            placeholder="e.g. How many singers are there in each country, ordered by count descending?"
+            class="w-full bg-slate-950 border border-slate-700 text-slate-100 rounded-lg p-3 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent transition font-sans placeholder-slate-500 resize-none"></textarea>
+        </div>
+
+        <div class="flex items-center justify-between pt-1">
+          <div class="flex items-center gap-2 text-xs text-slate-400">
+            <span class="flex items-center gap-1">
+              <i data-lucide="shield-check" class="w-3.5 h-3.5 text-emerald-400"></i>
+              Read-Only SQLite URI
+            </span>
+            <span>•</span>
+            <span class="flex items-center gap-1">
+              <i data-lucide="check" class="w-3.5 h-3.5 text-emerald-400"></i>
+              sqlglot AST Guard
+            </span>
+          </div>
+
+          <button id="run-btn" onclick="submitQuery()"
+            class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-500 active:bg-emerald-700 text-slate-950 font-semibold text-sm rounded-lg flex items-center gap-2 shadow-lg shadow-emerald-950/30 transition cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+            <i id="btn-icon" data-lucide="play" class="w-4 h-4 fill-current"></i>
+            <span id="btn-text">Run Query</span>
+          </button>
+        </div>
+
+      </div>
+
+      <!-- Live Execution Banner (Hidden initially) -->
+      <div id="metrics-banner" class="hidden bg-slate-900 border border-slate-800 rounded-xl p-4 flex flex-wrap items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <div id="status-badge" class="px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+            <i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i>
+            <span>SUCCESS</span>
+          </div>
+          <span id="heal-badge" class="hidden px-2.5 py-1 rounded text-xs font-bold bg-amber-500/20 text-amber-400 border border-amber-500/30 flex items-center gap-1">
+            <i data-lucide="activity" class="w-3.5 h-3.5"></i>
+            <span>SELF-HEALED</span>
+          </span>
+        </div>
+
+        <div class="flex items-center space-x-6 text-xs text-slate-400 font-mono">
+          <div>
+            Latency: <span id="stat-latency" class="text-slate-200 font-semibold">0.00s</span>
+          </div>
+          <div>
+            Attempts: <span id="stat-attempts" class="text-slate-200 font-semibold">1</span>
+          </div>
+          <div>
+            Rows: <span id="stat-rows" class="text-slate-200 font-semibold">0</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Generated SQL Card -->
+      <div id="sql-card" class="hidden bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+        <div class="bg-slate-850 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
+            <i data-lucide="terminal" class="w-4 h-4 text-emerald-400"></i>
+            Generated SQLite Query
+          </div>
+          <button onclick="copySql()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition">
+            <i data-lucide="copy" class="w-3.5 h-3.5"></i>
+            <span id="copy-btn-text">Copy SQL</span>
+          </button>
+        </div>
+        <div class="p-4 bg-slate-950 overflow-x-auto">
+          <pre><code id="output-sql" class="language-sql text-sm font-mono text-emerald-300"></code></pre>
+        </div>
+      </div>
+
+      <!-- Agent Trace & Self-Healing Log (Expandable) -->
+      <div id="trace-card" class="hidden bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+        <details class="group" open>
+          <summary class="bg-slate-850 px-4 py-3 border-b border-slate-800 flex items-center justify-between cursor-pointer list-none">
+            <div class="flex items-center gap-2 text-xs font-semibold text-slate-300 uppercase tracking-wider">
+              <i data-lucide="workflow" class="w-4 h-4 text-emerald-400"></i>
+              LangGraph Execution & Self-Healing Trace
+            </div>
+            <i data-lucide="chevron-down" class="w-4 h-4 text-slate-400 group-open:rotate-180 transition-transform"></i>
+          </summary>
+          <div id="trace-steps" class="p-4 space-y-3 bg-slate-950/50">
+            <!-- Dynamically populated with attempts and errors -->
+          </div>
+        </details>
+      </div>
+
+      <!-- Data Result Table Card -->
+      <div id="table-card" class="hidden bg-slate-900 border border-slate-800 rounded-xl overflow-hidden shadow-sm">
+        <div class="bg-slate-850 px-4 py-2.5 border-b border-slate-800 flex items-center justify-between">
+          <div class="flex items-center gap-2 text-xs font-semibold text-slate-300">
+            <i data-lucide="table-2" class="w-4 h-4 text-emerald-400"></i>
+            Database Execution Results
+          </div>
+          <div class="flex items-center space-x-3">
+            <span id="row-count-badge" class="text-xs font-mono text-slate-400">0 rows</span>
+            <button onclick="exportCsv()" class="text-xs text-slate-400 hover:text-white flex items-center gap-1 cursor-pointer transition">
+              <i data-lucide="download" class="w-3.5 h-3.5"></i>
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto max-h-96">
+          <table id="result-table" class="w-full text-left border-collapse text-xs">
+            <thead class="bg-slate-900/90 text-slate-300 font-semibold border-b border-slate-800 sticky top-0">
+              <tr id="table-head-row">
+                <!-- Columns -->
+              </tr>
+            </thead>
+            <tbody id="table-body" class="divide-y divide-slate-800/60 font-mono text-slate-300">
+              <!-- Rows -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Empty / Standby Placeholder State -->
+      <div id="empty-state" class="border border-dashed border-slate-800 rounded-xl p-12 text-center space-y-3">
+        <div class="w-12 h-12 rounded-full bg-slate-900 text-slate-500 mx-auto flex items-center justify-center">
+          <i data-lucide="compass" class="w-6 h-6"></i>
+        </div>
+        <h3 class="text-sm font-semibold text-slate-300">Analyst Agent Standing By</h3>
+        <p class="text-xs text-slate-500 max-w-sm mx-auto">
+          Choose a target database, select a sample question or type your custom natural language query, then hit <strong class="text-slate-400">Run Query</strong>.
+        </p>
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="border-t border-slate-800 bg-slate-950 py-4 text-center text-xs text-slate-500">
+    <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+      <div>
+        Text-to-SQL Analyst Agent • Built with 
+        <span class="text-slate-300 font-medium">Qwen2.5-Coder-3B</span>, 
+        <span class="text-slate-300 font-medium">QLoRA</span>, 
+        <span class="text-slate-300 font-medium">LangGraph</span> & 
+        <span class="text-slate-300 font-medium">FastAPI</span>.
+      </div>
+      <div class="font-mono text-[11px] text-slate-600">
+        NVIDIA RTX 3060 12GB • Evaluated on Spider Dev
+      </div>
+    </div>
+  </footer>
+
+  <!-- ================= APPLICATION LOGIC (VANILLA JS) ================= -->
+  <script>
+    // Smart API Base:
+    // If page is loaded as a local file or from a different port (e.g. Live Server 5500),
+    // automatically point requests to the running FastAPI server on http://127.0.0.1:8000.
+    const API_BASE = (window.location.protocol === 'file:' || (window.location.port !== '8000' && window.location.port !== ''))
+      ? 'http://127.0.0.1:8000'
+      : '';
+
+    // Global Application State
+    const state = {
+      databases: [],
+      currentDb: null,
+      strategy: 'resample',
+      queryResult: null,
+      sampleQuestionsMap: {
+        'singer': [
+          "How many singers are there?",
+          "What is the average age of all singers?",
+          "List all singers ordered by age descending."
+        ],
+        'concert_singer': [
+          "How many concerts were held in each year?",
+          "What are the names of all singers who performed in New York?",
+          "Find the highest capacity stadium where a concert took place."
+        ],
+        'world_1': [
+          "Which country has the highest life expectancy?",
+          "List the top 5 countries by total population.",
+          "How many different government forms exist in Europe?"
+        ],
+        'tvshow': [
+          "What is the title and channel of each TV show?",
+          "Find the TV show with the highest viewer rating.",
+          "List all episodes released in 2018."
+        ],
+        'dog_kennels': [
+          "How many dogs are registered in the system?",
+          "List all breeds and their average weight.",
+          "Which kennel has the maximum number of dogs?"
+        ],
+        'car_1': [
+          "What is the average horsepower for 4-cylinder cars?",
+          "List all car models made in 1970 ordered by MPG.",
+          "Find the total number of cars produced by each automaker."
+        ],
+        'flight_2': [
+          "How many total flights are scheduled?",
+          "Find all flights departing from New York to Los Angeles.",
+          "Which airline has the highest number of flights?"
+        ]
+      }
+    };
+
+    function showConnectionError() {
+      const banner = document.getElementById("connection-banner");
+      if (banner) banner.classList.remove("hidden");
+      const dot = document.getElementById("gpu-dot");
+      const pulse = document.getElementById("gpu-pulse");
+      if (dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500";
+      if (pulse) pulse.classList.add("hidden");
+      const name = document.getElementById("gpu-name");
+      if (name) name.innerText = "API Offline";
+      if (window.lucide) lucide.createIcons();
+    }
+
+    function hideConnectionError() {
+      const banner = document.getElementById("connection-banner");
+      if (banner) banner.classList.add("hidden");
+      const dot = document.getElementById("gpu-dot");
+      const pulse = document.getElementById("gpu-pulse");
+      if (dot) dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500";
+      if (pulse) pulse.classList.remove("hidden");
+    }
+
+    // Initialize UI on load
+    document.addEventListener("DOMContentLoaded", async () => {
+      if (window.lucide) lucide.createIcons();
+      await fetchHealth();
+      await fetchDatabases();
+
+      // Keyboard shortcut: Ctrl + Enter / Cmd + Enter to run
+      document.getElementById("question-input").addEventListener("keydown", (e) => {
+        if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+          e.preventDefault();
+          submitQuery();
+        }
+      });
+
+      // Poll health every 30s
+      setInterval(fetchHealth, 30000);
+    });
+
+    // Strategy switch
+    function setStrategy(strat) {
+      state.strategy = strat;
+      const resampleBtn = document.getElementById("strat-resample");
+      const feedbackBtn = document.getElementById("strat-feedback");
+      const activePill = document.getElementById("active-strategy-pill");
+
+      if (strat === 'resample') {
+        resampleBtn.className = "w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-emerald-500 bg-emerald-500/10 text-emerald-300";
+        feedbackBtn.className = "w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-slate-700 bg-slate-950 text-slate-400 hover:border-slate-600";
+        if (activePill) {
+          activePill.innerText = "Resample (Active)";
+          activePill.className = "text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20";
+        }
+      } else {
+        feedbackBtn.className = "w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-emerald-500 bg-emerald-500/10 text-emerald-300";
+        resampleBtn.className = "w-full p-2.5 text-xs font-medium rounded-lg border text-left transition flex flex-col cursor-pointer border-slate-700 bg-slate-950 text-slate-400 hover:border-slate-600";
+        if (activePill) {
+          activePill.innerText = "Feedback (Active)";
+          activePill.className = "text-[10px] font-mono text-sky-400 bg-sky-500/10 px-2 py-0.5 rounded border border-sky-500/20";
+        }
+      }
+    }
+
+    // Fetch Health
+    async function fetchHealth() {
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/health`);
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById("gpu-name").innerText = data.device_name || "GPU Detected";
+          if (data.vram_used_gb && data.vram_total_gb) {
+            document.getElementById("vram-stat").innerText = `VRAM: ${data.vram_used_gb.toFixed(1)} / ${data.vram_total_gb.toFixed(1)} GB`;
+          }
+          hideConnectionError();
+        } else {
+          showConnectionError();
+        }
+      } catch (err) {
+        console.warn("Could not fetch health:", err);
+        showConnectionError();
+      }
+    }
+
+    // Fetch Databases
+    async function fetchDatabases() {
+      const select = document.getElementById("db-select");
+      try {
+        const res = await fetch(`${API_BASE}/api/v1/databases`);
+        if (!res.ok) throw new Error("Failed to fetch databases: " + res.status);
+        const data = await res.json();
+        state.databases = data.databases;
+
+        select.innerHTML = "";
+
+        state.databases.forEach((db, idx) => {
+          const opt = document.createElement("option");
+          opt.value = db.db_id;
+          opt.text = `${db.db_id} (${db.tables.length} tables)`;
+          if (db.db_id === 'singer') opt.selected = true;
+          select.appendChild(opt);
+        });
+
+        document.getElementById("db-count-badge").innerText = `${state.databases.length} Available`;
+        document.getElementById("db-count-badge").className = "text-xs font-mono text-slate-400 bg-slate-800 px-2 py-0.5 rounded";
+
+        select.onchange = (e) => {
+          onDatabaseChange(e.target.value);
+        };
+
+        // Set default database
+        const defaultDb = state.databases.find(d => d.db_id === 'singer') || state.databases[0];
+        if (defaultDb) onDatabaseChange(defaultDb.db_id);
+        hideConnectionError();
+
+      } catch (err) {
+        console.error("Database fetch error:", err);
+        select.innerHTML = '<option value="" disabled selected>⚠️ Failed to connect to API</option>';
+        document.getElementById("db-count-badge").innerText = "Offline";
+        document.getElementById("db-count-badge").className = "text-xs font-mono text-rose-400 bg-rose-950/60 border border-rose-800/60 px-2 py-0.5 rounded";
+        showConnectionError();
+      }
+    }
+
+    // On Database Selection Change
+    function onDatabaseChange(dbId) {
+      const db = state.databases.find(d => d.db_id === dbId);
+      if (!db) return;
+      state.currentDb = db;
+
+      // Update tables chips
+      const chipsContainer = document.getElementById("table-chips");
+      chipsContainer.innerHTML = "";
+      db.tables.forEach(table => {
+        const chip = document.createElement("span");
+        chip.className = "px-2 py-0.5 rounded bg-slate-800 text-slate-300 font-mono text-xs border border-slate-700/60";
+        chip.innerText = table;
+        chipsContainer.appendChild(chip);
+      });
+
+      document.getElementById("db-size-stat").innerText = `${db.size_mb} MB`;
+
+      // Update DDL
+      const schemaCode = document.getElementById("schema-code");
+      schemaCode.textContent = db.schema_ddl;
+      if (window.Prism) {
+        try { Prism.highlightElement(schemaCode); } catch (e) {}
+      }
+
+      // Populate Sample Questions
+      const samplesContainer = document.getElementById("sample-questions");
+      samplesContainer.innerHTML = "";
+      const samples = state.sampleQuestionsMap[dbId] || [
+        `How many records exist in ${db.tables[0]}?`,
+        `List all columns from ${db.tables[0]} limit 10.`
+      ];
+
+      samples.forEach(q => {
+        const btn = document.createElement("button");
+        btn.type = "button";
+        btn.className = "w-full text-left text-xs bg-slate-950 hover:bg-slate-800/80 p-2 rounded-lg border border-slate-800 text-slate-300 hover:text-white transition cursor-pointer flex items-center justify-between group";
+        btn.innerHTML = `
+          <span class="truncate pr-2">${q}</span>
+          <i data-lucide="corner-down-left" class="w-3 h-3 text-slate-500 group-hover:text-emerald-400 transition flex-shrink-0"></i>
+        `;
+        btn.onclick = () => {
+          document.getElementById("question-input").value = q;
+        };
+        samplesContainer.appendChild(btn);
+      });
+
+      lucide.createIcons();
+    }
+
+    // Submit Query to Agent
+    async function submitQuery() {
+      const question = document.getElementById("question-input").value.trim();
+      if (!question) {
+        alert("Please enter a question.");
+        return;
+      }
+      if (!state.currentDb) {
+        alert("Please select a target database.");
+        return;
+      }
+
+      const runBtn = document.getElementById("run-btn");
+      const btnText = document.getElementById("btn-text");
+      const maxRetries = parseInt(document.getElementById("max-retries-slider").value, 10);
+
+      // Loading state
+      runBtn.disabled = true;
+      btnText.innerText = "Analyzing...";
+      document.getElementById("btn-icon").setAttribute("data-lucide", "loader-2");
+      document.getElementById("btn-icon").classList.add("animate-spin");
+      lucide.createIcons();
+
+      try {
+        const payload = {
+          question: question,
+          db_id: state.currentDb.db_id,
+          strategy: state.strategy,
+          max_retries: maxRetries,
+        };
+
+        const res = await fetch(`${API_BASE}/api/v1/query`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) {
+          const errData = await res.json();
+          throw new Error(errData.detail || "Server error");
+        }
+
+        const data = await res.json();
+        state.queryResult = data;
+        renderResults(data);
+
+      } catch (err) {
+        alert("Execution Error: " + err.message);
+      } finally {
+        runBtn.disabled = false;
+        btnText.innerText = "Run Query";
+        document.getElementById("btn-icon").setAttribute("data-lucide", "play");
+        document.getElementById("btn-icon").classList.remove("animate-spin");
+        lucide.createIcons();
+      }
+    }
+
+    // Render Query Results
+    function renderResults(res) {
+      document.getElementById("empty-state").classList.add("hidden");
+      document.getElementById("metrics-banner").classList.remove("hidden");
+      document.getElementById("sql-card").classList.remove("hidden");
+      document.getElementById("trace-card").classList.remove("hidden");
+      document.getElementById("table-card").classList.remove("hidden");
+
+      // 1. Metrics Banner
+      const isOk = res.status === 'ok';
+      const statusBadge = document.getElementById("status-badge");
+      if (isOk) {
+        statusBadge.className = "px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 flex items-center gap-1";
+        statusBadge.innerHTML = `<i data-lucide="check-circle-2" class="w-3.5 h-3.5"></i><span>SUCCESS</span>`;
+      } else {
+        statusBadge.className = "px-2.5 py-1 rounded text-xs font-bold uppercase tracking-wider bg-rose-500/20 text-rose-400 border border-rose-500/30 flex items-center gap-1";
+        statusBadge.innerHTML = `<i data-lucide="x-circle" class="w-3.5 h-3.5"></i><span>FAILED</span>`;
+      }
+
+      const healBadge = document.getElementById("heal-badge");
+      if (res.healed) {
+        healBadge.classList.remove("hidden");
+      } else {
+        healBadge.classList.add("hidden");
+      }
+
+      document.getElementById("stat-latency").innerText = `${res.latency_seconds.toFixed(2)}s`;
+      document.getElementById("stat-attempts").innerText = res.attempts_count;
+      document.getElementById("stat-rows").innerText = res.rows ? res.rows.length : 0;
+
+      // 2. SQL Output
+      const sqlElem = document.getElementById("output-sql");
+      sqlElem.textContent = res.sql || "-- No SQL statement generated";
+      if (window.Prism) {
+        try { Prism.highlightElement(sqlElem); } catch (e) {}
+      }
+
+      // 3. Execution Trace Steps
+      const traceContainer = document.getElementById("trace-steps");
+      traceContainer.innerHTML = "";
+
+      res.attempts.forEach((att, idx) => {
+        const stepDiv = document.createElement("div");
+        const hasError = Boolean(att.error);
+
+        stepDiv.className = `p-3 rounded-lg border text-xs font-mono ${
+          hasError 
+            ? "border-rose-900/60 bg-rose-950/20 text-rose-200" 
+            : "border-emerald-900/60 bg-emerald-950/20 text-emerald-200"
+        }`;
+
+        stepDiv.innerHTML = `
+          <div class="flex items-center justify-between font-semibold pb-1.5 border-b ${hasError ? 'border-rose-900/40 text-rose-400' : 'border-emerald-900/40 text-emerald-400'}">
+            <span class="flex items-center gap-1.5">
+              <i data-lucide="${hasError ? 'alert-triangle' : 'check'}" class="w-3.5 h-3.5"></i>
+              Attempt ${att.attempt}
+            </span>
+            <span class="uppercase text-[10px] tracking-wider">${hasError ? 'Failed & Reflected' : 'Executed Cleanly'}</span>
+          </div>
+          <div class="mt-2 text-slate-300">
+            <span class="text-slate-500">SQL:</span> <code class="text-slate-200">${escapeHtml(att.sql)}</code>
+          </div>
+          ${hasError ? `<div class="mt-1.5 text-rose-300 text-[11px]"><span class="text-rose-400 font-semibold">Error:</span> ${escapeHtml(att.error)}</div>` : ''}
+        `;
+        traceContainer.appendChild(stepDiv);
+      });
+
+      // 4. Data Table
+      const thead = document.getElementById("table-head-row");
+      const tbody = document.getElementById("table-body");
+      thead.innerHTML = "";
+      tbody.innerHTML = "";
+
+      if (res.columns && res.columns.length > 0) {
+        res.columns.forEach(col => {
+          const th = document.createElement("th");
+          th.className = "px-4 py-2 font-mono text-slate-300 font-semibold";
+          th.innerText = col;
+          thead.appendChild(th);
+        });
+      }
+
+      if (res.rows && res.rows.length > 0) {
+        res.rows.forEach(row => {
+          const tr = document.createElement("tr");
+          tr.className = "hover:bg-slate-850/50 transition";
+          row.forEach(val => {
+            const td = document.createElement("td");
+            td.className = "px-4 py-2 text-slate-200";
+            td.innerText = (val === null) ? "NULL" : val;
+            tr.appendChild(td);
+          });
+          tbody.appendChild(tr);
+        });
+      } else {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `<td colspan="${(res.columns && res.columns.length) || 1}" class="px-4 py-6 text-center text-slate-500 italic">Query executed successfully, but returned 0 rows.</td>`;
+        tbody.appendChild(tr);
+      }
+
+      document.getElementById("row-count-badge").innerText = `${res.rows ? res.rows.length : 0} rows${res.is_truncated ? ' (capped at 200)' : ''}`;
+
+      lucide.createIcons();
+    }
+
+    // Helper: Copy SQL
+    function copySql() {
+      if (!state.queryResult || !state.queryResult.sql) return;
+      navigator.clipboard.writeText(state.queryResult.sql);
+      const btnText = document.getElementById("copy-btn-text");
+      btnText.innerText = "Copied!";
+      setTimeout(() => { btnText.innerText = "Copy SQL"; }, 2000);
+    }
+
+    // Helper: Export CSV
+    function exportCsv() {
+      if (!state.queryResult || !state.queryResult.rows || !state.queryResult.columns) return;
+      const headers = state.queryResult.columns.join(",");
+      const rows = state.queryResult.rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+      const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(headers + "\n" + rows);
+      const link = document.createElement("a");
+      link.setAttribute("href", csvContent);
+      link.setAttribute("download", `query_result_${state.currentDb.db_id}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+
+    function escapeHtml(text) {
+      if (!text) return "";
+      return text
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+  </script>
+</body>
+</html>
